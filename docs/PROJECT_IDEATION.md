@@ -55,7 +55,7 @@ Receive no structured feedback
 
 Cannot measure improvement objectively
 
-SimuSpeak solves this by:
+SpotlightReady solves this by:
 
 Simulating realistic environments
 
@@ -522,8 +522,8 @@ Trigger n8n email report
 Optional:
 Quick 10-second Speech Mode demo.
 
-1️⃣3️⃣ Folder Structure Suggestion
-/simuspeak
+1️⃣3️⃣ Folder Structure Suggestion // not Final wee can change what is needed as per stack which is also not final
+/SpotLightReady
  ├── /docs
  │     ├── PROJECT_IDEATION.md
  │
@@ -536,7 +536,7 @@ Quick 10-second Speech Mode demo.
  ├── /analysis-engine
  └── README.md
 1️⃣4️⃣ Final Product Identity
-SimuSpeak is:
+SpotlightReady is:
 
 A performance rehearsal engine
 
@@ -580,12 +580,12 @@ I’ll give you a clean, structured, copy‑paste master prompt that you can use
 You can paste this at the top of your project or in Copilot Chat.
 
 🔥 MASTER PROMPT FOR COPILOT
-(SimuSpeak – AI Performance Simulation Engine)
+(SpotlightReady – AI Performance Simulation Engine)
 
-You are helping build a project called "SimuSpeak".
+You are helping build a project called "SpotlightReady".
 
 PROJECT OVERVIEW:
-SimuSpeak is an AI-powered immersive performance simulation platform that helps users rehearse high-stakes real-world scenarios (job interviews, public speeches, pitches) using real-time audio-video analysis and structured post-session performance analytics.
+SpotlightReady is an AI-powered immersive performance simulation platform that helps users rehearse high-stakes real-world scenarios (job interviews, public speeches, pitches) using real-time audio-video analysis and structured post-session performance analytics.
 
 This is NOT a chatbot.
 This is NOT just a grammar checker.
@@ -765,7 +765,7 @@ Confidence & Flow (20%)
 ---
 
 ========================
-TECH STACK
+TECH STACK  // not at all final the coding agents need to think and take decison which is good better 
 ========================
 
 Frontend:
@@ -779,14 +779,14 @@ Backend:
 - Node.js API routes
 - MongoDB for session storage
 
-AI Layer (Mastra):
+AI Layer (Mastra):(Not final it is little bit partial decison cause of hackathon sponsers they are More options there)
 Use Mastra agents for:
 - Question generation
 - Evaluation rubric generation
 - Transcript analysis
 - Feedback generation
 
-Automation Layer (n8n):
+Automation Layer (n8n   - also not final you can think):
 Workflow:
 - Receive session report JSON
 - Store in database
@@ -796,7 +796,7 @@ Workflow:
 - Schedule improvement reminder
 
 ---
-
+Whole tech stack is flexxible as per agents will think and get better option with the developer
 ========================
 DESIGN PHILOSOPHY
 ========================
@@ -853,3 +853,9 @@ Paste this into Copilot Chat
 Use it as /docs/AI_CONTEXT.md
 
 Or load it into any coding agent as system context
+
+
+it is good to make new branch first then doing everyhting on the mai branch as everything is voonecte to repo with other team mebers use best practices 
+
+https://featherless.ai/  also the sponser llm hosting platform
+![alt text](image.png)    not important  to use as we dont have any instructinon to use them or any extra prizes will be given or not 

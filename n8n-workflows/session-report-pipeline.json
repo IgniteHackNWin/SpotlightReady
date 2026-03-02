@@ -1,0 +1,87 @@
+{
+  "name": "SpotlightReady – Session Report Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "session-complete",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook: Session Complete",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MASTRA_API_URL }}/agents/rubricCreator/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "sessionConfig", "value": "={{ $json.config }}" },
+            { "name": "transcript", "value": "={{ $json.transcript }}" }
+          ]
+        }
+      },
+      "name": "Mastra: Create Rubric",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MASTRA_API_URL }}/agents/transcriptEvaluator/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "transcript", "value": "={{ $('Webhook: Session Complete').item.json.transcript }}" },
+            { "name": "rubric", "value": "={{ $json.rubric }}" },
+            { "name": "mode", "value": "={{ $('Webhook: Session Complete').item.json.config.mode }}" }
+          ]
+        }
+      },
+      "name": "Mastra: Evaluate Transcript",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MASTRA_API_URL }}/agents/feedbackGenerator/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "contentIntelligence", "value": "={{ $json.contentScore }}" },
+            { "name": "metricsTimeline", "value": "={{ $('Webhook: Session Complete').item.json.metricsTimeline }}" }
+          ]
+        }
+      },
+      "name": "Mastra: Generate Feedback",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SPOTLIGHTREADY_API_URL }}/api/reports",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "sessionId", "value": "={{ $('Webhook: Session Complete').item.json.sessionId }}" },
+            { "name": "userId", "value": "={{ $('Webhook: Session Complete').item.json.userId }}" },
+            { "name": "report", "value": "={{ $json }}" }
+          ]
+        }
+      },
+      "name": "Store Report in DB",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook: Session Complete": { "main": [[{ "node": "Mastra: Create Rubric", "type": "main", "index": 0 }]] },
+    "Mastra: Create Rubric": { "main": [[{ "node": "Mastra: Evaluate Transcript", "type": "main", "index": 0 }]] },
+    "Mastra: Evaluate Transcript": { "main": [[{ "node": "Mastra: Generate Feedback", "type": "main", "index": 0 }]] },
+    "Mastra: Generate Feedback": { "main": [[{ "node": "Store Report in DB", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": ["spotlightready", "core-pipeline"]
+}
