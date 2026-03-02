@@ -1,8 +1,8 @@
-import { Router } from 'express'
+import express from 'express'
 import { Report } from '../db/models/Report'
 import type { ApiResponse, PerformanceReport } from '@spotlightready/shared'
 
-export const reportsRouter = Router()
+export const reportsRouter: express.Router = express.Router()
 
 // GET /api/reports/:sessionId  – Get report for a session
 reportsRouter.get('/:sessionId', async (req, res) => {

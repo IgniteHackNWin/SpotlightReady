@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSessionStore } from '@/store/sessionStore'
 
@@ -14,7 +14,7 @@ const PROCESSING_STEPS = [
 
 /**
  * POST-SESSION: Processing screen
- * Shows animated steps while backend + Mastra pipeline generates the report
+ * Submits session to backend + shows animated steps while AI generates the report
  */
 export default function ProcessingPage() {
   const router = useRouter()
@@ -22,16 +22,19 @@ export default function ProcessingPage() {
 
   const [currentStep, setCurrentStep] = useState(0)
   const [done, setDone] = useState(false)
+  const reportIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!sessionData) {
       router.replace('/')
       return
     }
-    // Submit session to backend, then step through animation
-    submitSession().catch(console.error)
+
+    // Submit session + run animation in parallel
+    // submitSession returns the reportId from the backend
+    submitSession().then((id) => { reportIdRef.current = id }).catch(console.error)
     runSteps()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const runSteps = async () => {
     for (let i = 0; i < PROCESSING_STEPS.length; i++) {
@@ -39,7 +42,11 @@ export default function ProcessingPage() {
       setCurrentStep(i + 1)
     }
     setDone(true)
-    setTimeout(() => router.push(`/session/report/${sessionData?.sessionId}`), 800)
+    // Wait a beat for the check animation, then redirect to report
+    setTimeout(() => {
+      const id = reportIdRef.current ?? sessionData?.sessionId
+      router.push(`/session/report/${id}`)
+    }, 800)
   }
 
   return (
@@ -48,8 +55,10 @@ export default function ProcessingPage() {
         {/* Spinner */}
         <div className="relative w-24 h-24 mx-auto mb-10">
           <div className="absolute inset-0 rounded-full border-2 border-surface-700" />
-          <div className="absolute inset-0 rounded-full border-2 border-t-brand-500 animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center text-3xl">🧠</div>
+          <div className={`absolute inset-0 rounded-full border-2 border-t-brand-500 ${done ? '' : 'animate-spin'}`} />
+          <div className="absolute inset-0 flex items-center justify-center text-3xl">
+            {done ? '✅' : '🧠'}
+          </div>
         </div>
 
         <h2 className="text-2xl font-bold text-white mb-2">
@@ -61,7 +70,7 @@ export default function ProcessingPage() {
         <div className="space-y-3 text-left">
           {PROCESSING_STEPS.map((step, idx) => (
             <div key={step.label} className="flex items-center gap-3">
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold transition-colors ${
                 idx < currentStep
                   ? 'bg-accent-green text-surface-950'
                   : idx === currentStep
@@ -70,7 +79,9 @@ export default function ProcessingPage() {
               }`}>
                 {idx < currentStep ? '✓' : ''}
               </div>
-              <span className={`text-sm ${idx < currentStep ? 'text-white/80' : idx === currentStep ? 'text-white' : 'text-white/30'}`}>
+              <span className={`text-sm transition-colors ${
+                idx < currentStep ? 'text-white/80' : idx === currentStep ? 'text-white' : 'text-white/30'
+              }`}>
                 {step.label}
               </span>
             </div>

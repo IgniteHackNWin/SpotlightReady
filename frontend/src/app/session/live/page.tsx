@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { SessionConfig, LiveMetrics } from '@spotlightready/shared'
+import type { SessionConfig, LiveMetrics, TimestampedMetrics } from '@spotlightready/shared'
 import { LiveMetricsHUD } from '@/components/live/LiveMetricsHUD'
 import { SessionTimer } from '@/components/live/SessionTimer'
 import { QuestionCard } from '@/components/live/QuestionCard'
@@ -14,30 +14,50 @@ import { useEyeTracking } from '@/hooks/useEyeTracking'
  * LIVE SESSION PAGE  (Layer 2 – Real-Time Performance Engine)
  *
  * Design principle: MINIMAL. Non-distracting. Awareness only.
- * - No grammar corrections
- * - No detailed scoring
- * - No complex charts
- *
- * Only shows: Timer | Pace | Filler Count | Repetitions | Eye Contact | Confidence
+ * - No grammar corrections, no detailed scoring, no complex charts
+ * - Only shows: Timer | Pace | Filler Count | Repetitions | Eye Contact | Confidence
  */
 export default function LiveSessionPage() {
   const router = useRouter()
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  const { config, setSessionData, endSession } = useSessionStore()
-  const { metrics, transcript, startListening, stopListening } = useSpeechAnalysis(config)
+  const { config: storeConfig, sessionId: storeSessionId, setConfig, setSessionData } = useSessionStore()
+  const [activeConfig, setActiveConfig] = useState<SessionConfig | null>(storeConfig)
+
+  // Hydrate config from sessionStorage when Zustand store is empty
+  // (happens on hard refresh or direct URL navigation)
+  useEffect(() => {
+    if (!storeConfig) {
+      try {
+        const raw = sessionStorage.getItem('spotlightready:config')
+        if (raw) {
+          const cfg = JSON.parse(raw) as SessionConfig
+          setConfig(cfg)
+          setActiveConfig(cfg)
+        } else {
+          router.replace('/')
+        }
+      } catch {
+        router.replace('/')
+      }
+    }
+    startCamera()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep local activeConfig in sync if store updates
+  useEffect(() => {
+    if (storeConfig) setActiveConfig(storeConfig)
+  }, [storeConfig])
+
+  const { metrics, transcript, startListening, stopListening } = useSpeechAnalysis(activeConfig)
   const { eyeMetrics, startTracking, stopTracking } = useEyeTracking(videoRef)
 
   const [isStarted, setIsStarted] = useState(false)
-  const [sessionId] = useState(() => crypto.randomUUID())
+  const startedAtRef = useRef<string>('')
 
-  useEffect(() => {
-    if (!config) {
-      router.replace('/')
-      return
-    }
-    startCamera()
-  }, [config])
+  // Use backend-assigned sessionId (from createSession call in setup page)
+  // Fall back to a local UUID if backend was unreachable
+  const sessionIdRef = useRef<string>(storeSessionId ?? crypto.randomUUID())
 
   const startCamera = async () => {
     try {
@@ -49,6 +69,7 @@ export default function LiveSessionPage() {
   }
 
   const handleStart = () => {
+    startedAtRef.current = new Date().toISOString()
     setIsStarted(true)
     startListening()
     startTracking()
@@ -58,15 +79,24 @@ export default function LiveSessionPage() {
     stopListening()
     stopTracking()
 
-    const sessionData = {
-      sessionId,
-      config: config!,
-      transcript,
-      metricsTimeline: [],  // populated by useSpeechAnalysis
-      recordingUrl: null,
-    }
+    const endedAt = new Date().toISOString()
+    const startedAt = startedAtRef.current || endedAt
+    const durationSeconds = Math.round(
+      (new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 1000
+    )
+    const userId = localStorage.getItem('sr_uid') ?? 'anon'
 
-    setSessionData(sessionData)
+    setSessionData({
+      sessionId: sessionIdRef.current,
+      userId,
+      config: activeConfig!,
+      startedAt,
+      endedAt,
+      durationSeconds,
+      transcript,
+      metricsTimeline: [] as TimestampedMetrics[],
+      recordingUrl: null,
+    })
     router.push('/session/processing')
   }
 
@@ -108,8 +138,8 @@ export default function LiveSessionPage() {
           </button>
         </div>
 
-        {/* Center – Question display (interview mode) */}
-        {config?.mode === 'interview' && (
+        {/* Center – Question display (interview mode only) */}
+        {activeConfig?.mode === 'interview' && (
           <div className="flex-1 flex items-center justify-center px-8">
             <QuestionCard />
           </div>

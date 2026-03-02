@@ -3,17 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "description": "AI-powered immersive performance simulation platform for interviews, speeches, and pitches",
-  "workspaces": [
-    "frontend",
-    "backend",
-    "mastra-agents",
-    "shared"
-  ],
+
   "scripts": {
     "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\"",
     "dev:frontend": "pnpm --filter frontend dev",
     "dev:backend": "pnpm --filter backend dev",
-    "dev:agents": "pnpm --filter mastra-agents dev",
     "build": "pnpm --filter frontend build && pnpm --filter backend build",
     "lint": "pnpm --filter frontend lint && pnpm --filter backend lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",

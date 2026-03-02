@@ -6,9 +6,10 @@ import type { SessionConfig } from '@spotlightready/shared'
 interface Props {
   config: SessionConfig
   onStart: () => void
+  isLoading?: boolean
 }
 
-export function PreparationScreen({ config, onStart }: Props) {
+export function PreparationScreen({ config, onStart, isLoading = false }: Props) {
   const [cameraReady, setCameraReady] = useState(false)
   const [micReady, setMicReady] = useState(false)
   const [countdown, setCountdown] = useState<number | null>(null)
@@ -74,10 +75,14 @@ export function PreparationScreen({ config, onStart }: Props) {
 
       <button
         onClick={handleStart}
-        disabled={!cameraReady || countdown !== null}
+        disabled={!cameraReady || countdown !== null || isLoading}
         className="w-full py-4 bg-brand-500 hover:bg-brand-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all hover:scale-[1.02] disabled:hover:scale-100"
       >
-        {countdown !== null ? `Starting in ${countdown}...` : 'Begin Session'}
+        {isLoading
+          ? 'Preparing session…'
+          : countdown !== null
+          ? `Starting in ${countdown}...`
+          : 'Begin Session'}
       </button>
     </div>
   )

@@ -6,6 +6,7 @@ import type { SessionMode, InterviewConfig, SpeechConfig } from '@spotlightready
 import { InterviewSetupForm } from '@/components/setup/InterviewSetupForm'
 import { SpeechSetupForm } from '@/components/setup/SpeechSetupForm'
 import { PreparationScreen } from '@/components/setup/PreparationScreen'
+import { useSessionStore } from '@/store/sessionStore'
 
 type SetupStep = 'configure' | 'prepare'
 
@@ -18,8 +19,10 @@ export default function SessionSetupPage() {
   const router = useRouter()
   const mode = searchParams.get('mode') as SessionMode
 
+  const { createSession } = useSessionStore()
   const [step, setStep] = useState<SetupStep>('configure')
   const [config, setConfig] = useState<InterviewConfig | SpeechConfig | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
 
   if (!mode || (mode !== 'interview' && mode !== 'speech')) {
     router.replace('/')
@@ -31,11 +34,21 @@ export default function SessionSetupPage() {
     setStep('prepare')
   }
 
-  const handleSessionStart = () => {
-    if (!config) return
-    // Store config and navigate to live session
-    sessionStorage.setItem('spotlightready:config', JSON.stringify(config))
-    router.push('/session/live')
+  const handleSessionStart = async () => {
+    if (!config || isCreating) return
+    setIsCreating(true)
+    try {
+      // Create session in backend → gets sessionId + AI questions
+      await createSession(config)
+      // Persist config to sessionStorage as hydration fallback on live page
+      sessionStorage.setItem('spotlightready:config', JSON.stringify(config))
+    } catch {
+      // If backend is down, still allow offline-mode session
+      sessionStorage.setItem('spotlightready:config', JSON.stringify(config))
+    } finally {
+      setIsCreating(false)
+      router.push('/session/live')
+    }
   }
 
   return (
@@ -57,7 +70,7 @@ export default function SessionSetupPage() {
           <SpeechSetupForm onSubmit={handleConfigSubmit} />
         )}
         {step === 'prepare' && config && (
-          <PreparationScreen config={config} onStart={handleSessionStart} />
+          <PreparationScreen config={config} onStart={handleSessionStart} isLoading={isCreating} />
         )}
       </div>
     </main>
