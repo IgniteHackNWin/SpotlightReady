@@ -17,8 +17,9 @@ const SCORE_COLORS = {
  * Animated score ring reveal + tier badge + strengths/improvements
  */
 export function OverallScoreCard({ summary, breakdown }: Props) {
-  const circumference = 2 * Math.PI * 45  // radius=45
-  const dashOffset = circumference - (summary.totalScore / 100) * circumference
+  if (!summary || !breakdown) return null
+  const circumference = 2 * Math.PI * 45
+  const dashOffset = circumference - ((summary.totalScore ?? 0) / 100) * circumference
 
   return (
     <div className="glass-card p-8 animate-slide-up">
@@ -55,7 +56,7 @@ export function OverallScoreCard({ summary, breakdown }: Props) {
                 ✦ Top Strengths
               </p>
               <ul className="space-y-1">
-                {summary.topStrengths.map((s) => (
+                {(summary.topStrengths ?? []).map((s) => (
                   <li key={s} className="text-white/70 text-sm">{s}</li>
                 ))}
               </ul>
@@ -65,7 +66,7 @@ export function OverallScoreCard({ summary, breakdown }: Props) {
                 ◈ Improvements
               </p>
               <ul className="space-y-1">
-                {summary.topImprovements.map((s) => (
+                {(summary.topImprovements ?? []).map((s) => (
                   <li key={s} className="text-white/70 text-sm">{s}</li>
                 ))}
               </ul>

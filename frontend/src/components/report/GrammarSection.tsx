@@ -3,6 +3,9 @@ import type { GrammarLanguage } from '@spotlightready/shared'
 interface Props { data: GrammarLanguage }
 
 export function GrammarSection({ data }: Props) {
+  if (!data) return null
+  const correctedSentences = data.correctedSentences ?? []
+  const vocabularyUpgrades = data.vocabularyUpgrades ?? []
   return (
     <section className="glass-card p-6">
       <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
@@ -11,11 +14,11 @@ export function GrammarSection({ data }: Props) {
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Corrected sentences */}
-        {data.correctedSentences.length > 0 && (
+        {correctedSentences.length > 0 && (
           <div>
             <p className="text-white/40 text-xs uppercase tracking-wider mb-3">Corrections</p>
             <div className="space-y-3">
-              {data.correctedSentences.slice(0, 3).map((item, i) => (
+              {correctedSentences.slice(0, 3).map((item, i) => (
                 <div key={i} className="text-sm space-y-1">
                   <p className="text-accent-red/80 line-through">{item.original}</p>
                   <p className="text-accent-green/90">→ {item.corrected}</p>
@@ -26,11 +29,11 @@ export function GrammarSection({ data }: Props) {
         )}
 
         {/* Vocabulary upgrades */}
-        {data.vocabularyUpgrades.length > 0 && (
+        {vocabularyUpgrades.length > 0 && (
           <div>
             <p className="text-white/40 text-xs uppercase tracking-wider mb-3">Vocabulary Upgrades</p>
             <div className="space-y-2">
-              {data.vocabularyUpgrades.slice(0, 4).map((item) => (
+              {vocabularyUpgrades.slice(0, 4).map((item) => (
                 <div key={item.word} className="flex items-center gap-2 text-sm">
                   <span className="text-white/50">&quot;{item.word}&quot;</span>
                   <span className="text-white/30">→</span>

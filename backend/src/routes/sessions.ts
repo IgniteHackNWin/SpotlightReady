@@ -68,6 +68,30 @@ sessionsRouter.post('/:id/submit', async (req, res) => {
   }
 })
 
+// POST /api/sessions/:id/regenerate  – Retry report generation for a failed session
+sessionsRouter.post('/:id/regenerate', async (req, res) => {
+  try {
+    const session = await Session.findById(req.params.id)
+    if (!session) return res.status(404).json({ success: false, error: 'Session not found' })
+
+    res.json({ success: true, data: { status: 'regenerating' } })
+
+    setImmediate(async () => {
+      try {
+        const sessionDoc = session.toJSON() as any
+        const report = await generateReport(sessionDoc)
+        const reportDoc = new Report({ ...report, sessionId: session.id })
+        await reportDoc.save()
+        console.log(`[Report] Regenerated for session ${session.id}`)
+      } catch (err) {
+        console.error('[Report regeneration failed]', err)
+      }
+    })
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Failed to regenerate' })
+  }
+})
+
 // GET /api/sessions/:id
 sessionsRouter.get('/:id', async (req, res) => {
   try {

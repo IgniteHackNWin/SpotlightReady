@@ -3,6 +3,7 @@ import type { VisualPresence } from '@spotlightready/shared'
 interface Props { data: VisualPresence }
 
 export function VisualPresenceSection({ data }: Props) {
+  if (!data) return null
   return (
     <section className="glass-card p-6">
       <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
@@ -17,7 +18,7 @@ export function VisualPresenceSection({ data }: Props) {
           <ScoreCircle label="Posture" value={data.postureStabilityScore} />
         )}
       </div>
-      {data.eyeContactDips.length > 0 && (
+      {(data.eyeContactDips ?? []).length > 0 && (
         <div className="mt-6">
           <p className="text-white/40 text-xs uppercase tracking-wider mb-2">Eye Contact Dips</p>
           <p className="text-white/60 text-sm">{data.eyeContactDips.length} dip(s) detected during session</p>

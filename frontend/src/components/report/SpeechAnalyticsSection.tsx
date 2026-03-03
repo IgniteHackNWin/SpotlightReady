@@ -3,6 +3,8 @@ import type { SpeechAnalytics } from '@spotlightready/shared'
 interface Props { data: SpeechAnalytics }
 
 export function SpeechAnalyticsSection({ data }: Props) {
+  if (!data) return null
+  const fillerBreakdown = data.fillerWordBreakdown ?? {}
   return (
     <section className="glass-card p-6">
       <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
@@ -10,17 +12,16 @@ export function SpeechAnalyticsSection({ data }: Props) {
         Speech Analytics
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Stat label="Avg WPM" value={data.averageWPM} unit="wpm" />
-        <Stat label="Filler Words" value={data.totalFillerWords} highlight={data.totalFillerWords > 10} />
-        <Stat label="Rhythm Score" value={data.rhythmConsistencyScore} unit="/100" />
-        <Stat label="Stutters" value={data.stutterCount} highlight={data.stutterCount > 5} />
+        <Stat label="Avg WPM" value={data.averageWPM ?? 0} unit="wpm" />
+        <Stat label="Filler Words" value={data.totalFillerWords ?? 0} highlight={(data.totalFillerWords ?? 0) > 10} />
+        <Stat label="Rhythm Score" value={data.rhythmConsistencyScore ?? 0} unit="/100" />
+        <Stat label="Stutters" value={data.stutterCount ?? 0} highlight={(data.stutterCount ?? 0) > 5} />
       </div>
-      {/* Filler breakdown */}
-      {Object.keys(data.fillerWordBreakdown).length > 0 && (
+      {Object.keys(fillerBreakdown).length > 0 && (
         <div>
           <p className="text-white/40 text-xs uppercase tracking-wider mb-3">Filler Breakdown</p>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(data.fillerWordBreakdown).map(([word, count]) => (
+            {Object.entries(fillerBreakdown).map(([word, count]) => (
               <span key={word} className="px-2 py-1 bg-surface-800 rounded-lg text-xs text-white/70">
                 &quot;{word}&quot; × {count}
               </span>

@@ -13,6 +13,14 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 4000
 
+// Validate Groq key at startup (shows first 8 chars only — safe to log)
+const groqKey = process.env.GROQ_API_KEY || ''
+if (!groqKey) {
+  console.error('❌ GROQ_API_KEY is missing from .env!')
+} else {
+  console.log(`🔑 Groq key loaded: ${groqKey.substring(0, 8)}... (${groqKey.length} chars)`)
+}
+
 // ── Middleware ─────────────────────────────────────────────────────────────────
 app.use(helmet())
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }))

@@ -85,7 +85,53 @@ export function compressTranscript(segments: TranscriptSegment[]): string {
   return full
 }
 
+// Fallback when transcript is empty (no speech captured)
+function buildFallbackEval(config: SessionConfig): EvalOutput {
+  if (config.mode === 'interview') {
+    return {
+      contentIntelligence: {
+        type: 'interview',
+        relevanceScore: 0,
+        keyConceptCoverage: 0,
+        missedPoints: ['No speech was captured — ensure microphone permissions are granted and try again'],
+        structureScore: 0,
+        depthScore: 0,
+        feedback: 'No transcript was captured. Check that your browser microphone permission is granted and that you are using Chrome or Edge for best Web Speech API support.',
+      },
+      grammarLanguage: {
+        topErrors: [],
+        correctedSentences: [],
+        vocabularyUpgrades: [],
+        weakTransitions: [],
+      },
+    }
+  }
+  return {
+    contentIntelligence: {
+      type: 'speech',
+      messageClarityScore: 0,
+      narrativeStructureScore: 0,
+      openingStrengthScore: 0,
+      conclusionImpactScore: 0,
+      emotionalEnergyTrend: 'flat',
+      feedback: 'No transcript was captured. Check microphone permissions and use Chrome or Edge.',
+    },
+    grammarLanguage: {
+      topErrors: [],
+      correctedSentences: [],
+      vocabularyUpgrades: [],
+      weakTransitions: [],
+    },
+  }
+}
+
 export async function evaluateTranscript(input: EvalInput): Promise<EvalOutput> {
+  // If no speech was captured, skip the LLM call entirely
+  if (!input.transcriptText || input.transcriptText.trim().length < 10) {
+    console.warn('[TranscriptEval] Transcript is empty — using fallback scores')
+    return buildFallbackEval(input.config)
+  }
+
   const system = input.config.mode === 'interview' ? INTERVIEW_SYSTEM : SPEECH_SYSTEM
 
   const topicLine =
@@ -95,8 +141,8 @@ export async function evaluateTranscript(input: EvalInput): Promise<EvalOutput> 
 
   const user = `${topicLine}
 Duration: ${Math.floor(input.durationSeconds / 60)}m ${input.durationSeconds % 60}s
-Total words: ${input.totalWords} (${Math.round((input.totalWords / input.durationSeconds) * 60)} WPM)
-Filler words: ${input.fillerCount} (top: ${input.topFillers.join(', ')})
+Total words: ${input.totalWords}
+Filler words: ${input.fillerCount} (top: ${input.topFillers.join(', ') || 'none'})
 
 TRANSCRIPT:
 ${input.transcriptText}`

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import useSWR from 'swr'
 import { OverallScoreCard } from '@/components/report/OverallScoreCard'
@@ -12,7 +12,11 @@ import { ReplaySection } from '@/components/report/ReplaySection'
 import { ImprovementPlanSection } from '@/components/report/ImprovementPlanSection'
 import type { PerformanceReport } from '@spotlightready/shared'
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((r) => r.data)
+const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api'
+
+// Only return data if the report actually exists (not 404/null)
+const fetcher = (url: string) =>
+  fetch(url).then((r) => r.json()).then((r) => r.success && r.data ? r.data : null)
 
 /**
  * POST-SESSION REPORT PAGE
@@ -20,25 +24,73 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json()).then((r) => r.
  */
 export default function ReportPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
+  const [timedOut, setTimedOut] = useState(false)
+  const [retrying, setRetrying] = useState(false)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const { data: report, isLoading, error } = useSWR<PerformanceReport>(
+  const [pollingEnabled, setPollingEnabled] = useState(true)
+
+  const { data: report, isLoading, mutate } = useSWR<PerformanceReport | null>(
     sessionId ? `/api/reports/${sessionId}` : null,
     fetcher,
-    { refreshInterval: 3000 }   // poll until report is ready
+    { refreshInterval: pollingEnabled ? 3000 : 0 }
   )
 
-  if (isLoading || !report) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <div className="text-white/50">Loading your report...</div>
-      </main>
-    )
+  // Stop polling once report arrives
+  useEffect(() => {
+    if (report) setPollingEnabled(false)
+  }, [report])
+
+  // Timeout after 90s — report generation should never take longer
+  useEffect(() => {
+    if (report) return
+    timeoutRef.current = setTimeout(() => setTimedOut(true), 90_000)
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
+  }, [report])
+
+  const handleRetry = async () => {
+    setRetrying(true)
+    setTimedOut(false)
+    try {
+      // Hit the regenerate endpoint then resume polling
+      await fetch(`${API}/sessions/${sessionId}/regenerate`, { method: 'POST' })
+      setTimeout(() => mutate(), 5000) // give AI 5s head start then resume poll
+    } catch {}
+    setRetrying(false)
   }
 
-  if (error) {
+  if (!report) {
+    if (timedOut) {
+      return (
+        <main className="min-h-screen flex items-center justify-center bg-surface-950">
+          <div className="text-center max-w-md">
+            <div className="text-4xl mb-4">⚠️</div>
+            <h2 className="text-xl font-bold text-white mb-2">Report taking too long</h2>
+            <p className="text-white/50 text-sm mb-6">
+              The AI analysis didn&apos;t complete in time. This can happen if the microphone
+              didn&apos;t capture audio, or the AI service was temporarily unavailable.
+            </p>
+            <button
+              onClick={handleRetry}
+              disabled={retrying}
+              className="px-6 py-3 bg-brand-500 hover:bg-brand-400 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
+            >
+              {retrying ? 'Retrying...' : 'Retry Report Generation'}
+            </button>
+          </div>
+        </main>
+      )
+    }
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <div className="text-accent-red">Failed to load report. Please try again.</div>
+      <main className="min-h-screen flex items-center justify-center bg-surface-950">
+        <div className="text-center">
+          <div className="relative w-16 h-16 mx-auto mb-6">
+            <div className="absolute inset-0 rounded-full border-2 border-surface-700" />
+            <div className="absolute inset-0 rounded-full border-2 border-t-brand-500 animate-spin" />
+          </div>
+          <p className="text-white font-medium mb-1">Generating your report...</p>
+          <p className="text-white/40 text-sm">AI is analysing your session</p>
+        </div>
       </main>
     )
   }

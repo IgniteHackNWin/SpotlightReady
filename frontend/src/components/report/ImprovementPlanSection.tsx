@@ -10,6 +10,8 @@ const AREA_COLORS = {
 }
 
 export function ImprovementPlanSection({ plan }: Props) {
+  if (!plan) return null
+  const drills = plan.drills ?? []
   return (
     <section className="glass-card p-6">
       <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
@@ -24,7 +26,7 @@ export function ImprovementPlanSection({ plan }: Props) {
 
       {/* Drills */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {plan.drills.map((drill, i) => (
+        {drills.map((drill, i) => (
           <div key={i} className="p-4 bg-surface-800 rounded-xl border border-surface-700">
             <div className="flex items-center justify-between mb-2">
               <span

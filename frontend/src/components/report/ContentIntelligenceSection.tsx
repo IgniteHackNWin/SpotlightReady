@@ -3,6 +3,7 @@ import type { ContentIntelligence } from '@spotlightready/shared'
 interface Props { data: ContentIntelligence }
 
 export function ContentIntelligenceSection({ data }: Props) {
+  if (!data) return null
   return (
     <section className="glass-card p-6">
       <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
@@ -17,11 +18,11 @@ export function ContentIntelligenceSection({ data }: Props) {
           <ScoreRow label="Key Concept Coverage" value={data.keyConceptCoverage} />
           <ScoreRow label="Structure" value={data.structureScore} />
           <ScoreRow label="Depth" value={data.depthScore} />
-          {data.missedPoints.length > 0 && (
+          {(data.missedPoints ?? []).length > 0 && (
             <div className="mt-4 p-4 bg-accent-red/10 border border-accent-red/20 rounded-xl">
               <p className="text-accent-red text-xs font-medium uppercase tracking-wider mb-2">Missed Points</p>
               <ul className="space-y-1">
-                {data.missedPoints.map((p) => (
+                {(data.missedPoints ?? []).map((p) => (
                   <li key={p} className="text-white/60 text-sm">• {p}</li>
                 ))}
               </ul>
