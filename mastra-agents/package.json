@@ -1,0 +1,21 @@
+{
+  "name": "@spotlightready/mastra-agents",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "mastra dev",
+    "build": "mastra build",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@mastra/core": "^0.1.0",
+    "@spotlightready/shared": "workspace:*",
+    "dotenv": "^16.4.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.5"
+  }
+}

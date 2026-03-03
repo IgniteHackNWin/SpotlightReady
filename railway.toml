@@ -1,0 +1,10 @@
+# Railway deployment config for the backend
+# Railway auto-detects Node.js and runs this
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "pnpm --filter backend start"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
