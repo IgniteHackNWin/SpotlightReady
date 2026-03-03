@@ -2,10 +2,36 @@
 
 > **AI-Powered Immersive Performance Simulation Engine**
 
-SpotlightReady is a real-time performance simulation + analytics platform that helps users rehearse high-stakes scenarios — **job interviews, public speeches, pitches** — using live audio-video analysis and structured post-session intelligence.
+SpotlightReady is a real-time performance simulation + analytics platform that helps users rehearse high-stakes scenarios — **job interviews, public speeches, pitches** — using live AI analysis and structured post-session intelligence.
 
 This is **not** a chatbot. This is **not** a grammar checker.  
 This is a **performance rehearsal engine**.
+
+---
+
+## ✅ Current Status (March 2026 — Hackathon Dev)
+
+**Fully working end-to-end:**
+- 🏠 Landing page with mode selection (Interview / Speech / Pitch)
+- ⚙️ Session setup — role, difficulty, duration config
+- 🎤 Live session — AI-generated questions, real-time metrics display
+- 📊 AI-powered performance report with scores, feedback, improvement plan
+- 🗄️ MongoDB Atlas persistence (sessions + reports saved)
+- 🤖 Groq LLM integration (llama-3.1-8b-instant + llama-3.3-70b-versatile)
+
+**Report sections working:**
+- Overall Score Card (0–100) + tier (Beginner / Developing / Proficient / Expert)
+- Speech Analytics (WPM, filler words, rhythm, stutters)
+- Visual Presence (eye contact, head stability, expressiveness)
+- Content Intelligence (relevance, structure, depth, missed points)
+- Grammar & Language (corrections, vocabulary upgrades)
+- Session Replay timeline
+- Improvement Plan (drills + retry recommendation)
+
+**Coming next:**
+- Webcam + microphone real data capture (MediaPipe, Web Speech API)
+- Confidence & flow scoring from actual audio/video
+- PDF report export
 
 ---
 
@@ -13,24 +39,26 @@ This is a **performance rehearsal engine**.
 
 ```
 SpotlightReady/
-├── frontend/            → Next.js 14 App (Simulation UI + Analytics)
-├── backend/             → Node.js + Express API (Session management, scoring)
-├── mastra-agents/       → Mastra AI Agents (Question gen, Evaluation, Feedback)
-├── n8n-workflows/       → n8n automation workflows (Reports, Email, Storage)
-├── shared/              → Shared TypeScript types & utilities
-└── docs/                → Architecture, ideation, and planning docs
+├── frontend/      → Next.js 14 App Router (Simulation UI + Report pages)
+├── backend/       → Express.js API (Sessions, Reports, AI orchestration)
+├── shared/        → Shared TypeScript types (SessionData, PerformanceReport, etc.)
+└── docs/          → Architecture, ideation, and planning docs
 ```
 
 ---
 
 ## 🏗️ System Architecture
 
-| Layer | Package | Responsibility |
-|-------|---------|----------------|
-| **Layer 1** – Simulation Engine | `frontend` | Immersive UI, mode selection, session UX |
-| **Layer 2** – Real-Time Engine | `frontend` | WebRTC, MediaPipe, Web Speech API, live metrics |
-| **Layer 3** – AI Evaluation | `mastra-agents` | Question gen, transcript analysis, scoring, feedback |
-| **Layer 4** – Automation & Reports | `n8n-workflows` | PDF reports, email delivery, session storage, reminders |
+| Layer | Package | Tech |
+|-------|---------|------|
+| **UI** | `frontend` | Next.js 14, Tailwind CSS, Zustand |
+| **API** | `backend` | Express.js, MongoDB Atlas, tsx watch |
+| **AI** | `backend/src/ai/` | Groq API (llama models via openai SDK) |
+| **Types** | `shared` | TypeScript interfaces shared across packages |
+
+**AI Pipeline (2 LLM calls per session):**
+1. `transcriptEvaluator` → `llama-3.3-70b-versatile` — scores content, grammar, missed points
+2. `feedbackGenerator` → `llama-3.1-8b-instant` — generates improvement drills + plan
 
 ---
 
@@ -39,52 +67,71 @@ SpotlightReady/
 ### Prerequisites
 - Node.js ≥ 18
 - pnpm ≥ 8 → `npm install -g pnpm`
-- MongoDB (local or Atlas)
+- MongoDB Atlas account (free M0 tier)
+- Groq API key (free at [console.groq.com](https://console.groq.com))
 
-### Install dependencies
+### 1. Install dependencies
 ```bash
 pnpm install
 ```
 
-### Set up environment variables
-```bash
-cp frontend/.env.example frontend/.env.local
-cp backend/.env.example backend/.env
-cp mastra-agents/.env.example mastra-agents/.env
+### 2. Set up environment variables
+Create `backend/.env`:
+```env
+PORT=4000
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+MONGODB_URI=your_mongodb_atlas_connection_string
+MONGODB_DB_NAME=spotlightready
+LLM_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key
 ```
-Fill in your API keys (MongoDB URI, Mastra API key, etc.)
 
-### Run in development
-```bash
-pnpm dev                 # Frontend + Backend concurrently
-pnpm dev:frontend        # Frontend only
-pnpm dev:backend         # Backend only
-pnpm dev:agents          # Mastra agents only
+Create `frontend/.env.local`:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000/api
 ```
+
+### 3. Run in development
+```bash
+# Terminal 1 — Backend
+pnpm --filter backend dev
+
+# Terminal 2 — Frontend  
+pnpm --filter frontend dev
+```
+
+- Frontend → http://localhost:3000
+- Backend → http://localhost:4000
+- Health check → http://localhost:4000/health
+- Groq key test → http://localhost:4000/health/test-groq
 
 ---
 
-## 🎯 MVP Scope
+## 🎯 Feature Status
 
-- [x] Interview Mode
-- [x] Speech Mode  
-- [ ] Live 6 metrics (Timer, Pace, Filler, Repetition, Eye Contact, Confidence)
-- [ ] Transcript capture
-- [ ] Post-session structured scoring (7 sections)
-- [ ] Session replay with markers
-- [ ] Mastra AI evaluation pipeline
-- [ ] n8n report + email workflow
+- [x] Landing page — mode selection (Interview / Speech / Pitch)
+- [x] Session setup — role, topic, difficulty, duration
+- [x] Live session — AI questions, timer, real-time metrics UI
+- [x] Session submission + processing screen
+- [x] AI report generation (Groq LLM)
+- [x] Report page — score card, speech analytics, content intelligence, grammar, improvement plan
+- [x] MongoDB persistence (sessions + reports)
+- [ ] Webcam capture — MediaPipe eye contact / head tracking
+- [ ] Microphone capture — Web Speech API transcript + WPM
+- [ ] Confidence scoring from real audio/video data
+- [ ] PDF report export
 
 ---
 
 ## 📊 Scoring Model
 
-| Category | Weight |
-|----------|--------|
-| Speech Delivery | 30% |
-| Visual Presence | 20% |
-| Content Quality | 30% |
-| Confidence & Flow | 20% |
+| Category | Weight | Source |
+|----------|--------|--------|
+| Speech Delivery | 30/100 | AI transcript analysis |
+| Visual Presence | 20/100 | Webcam (coming soon) |
+| Content Quality | 30/100 | AI content evaluation |
+| Confidence & Flow | 20/100 | Combined metrics |
 
 ---
 
