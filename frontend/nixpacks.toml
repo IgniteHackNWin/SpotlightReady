@@ -2,7 +2,7 @@
 nixPkgs = ['nodejs_22', 'pnpm-8_x']
 
 [phases.install]
-cmds = ['npm install -g corepack@0.24.1 && corepack enable', 'pnpm i --frozen-lockfile']
+cmds = ['npm install -g corepack@0.24.1 && corepack enable', 'pnpm install --no-frozen-lockfile']
 
 [phases.build]
 cmds = ['pnpm --filter @spotlightready/frontend build']
