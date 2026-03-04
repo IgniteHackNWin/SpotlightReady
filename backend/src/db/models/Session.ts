@@ -21,7 +21,7 @@ const SessionSchema = new Schema<SessionDocument>(
     endedAt: { type: String, required: true },
     durationSeconds: { type: Number, required: true },
     transcript: { type: [TranscriptSegmentSchema], default: [] },
-    metricsTimeline: { type: Array, default: [] },
+    metricsTimeline: { type: Schema.Types.Mixed, default: [] },
     recordingUrl: { type: String, default: null },
   },
   {
