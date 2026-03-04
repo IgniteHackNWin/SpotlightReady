@@ -8,7 +8,7 @@
     "dev": "concurrently \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\"",
     "dev:frontend": "pnpm --filter frontend dev",
     "dev:backend": "pnpm --filter backend dev",
-    "build": "pnpm --filter frontend build && pnpm --filter backend build",
+    "build": "pnpm --filter @spotlightready/shared build && pnpm --filter frontend build && pnpm --filter backend build",
     "lint": "pnpm --filter frontend lint && pnpm --filter backend lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\""
