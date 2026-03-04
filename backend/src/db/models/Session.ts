@@ -21,14 +21,14 @@ const SessionSchema = new Schema<SessionDocument>(
     endedAt: { type: String, required: true },
     durationSeconds: { type: Number, required: true },
     transcript: { type: [TranscriptSegmentSchema], default: [] },
-    metricsTimeline: { type: [Schema.Types.Mixed], default: [] },
+    metricsTimeline: { type: Array, default: [] },
     recordingUrl: { type: String, default: null },
   },
   {
     timestamps: true,
     toJSON: {
-      transform: (_doc, ret) => {
-        ret.sessionId = ret._id.toString()
+      transform: (_doc, ret: Record<string, unknown>) => {
+        ret.sessionId = (ret._id as { toString(): string }).toString()
         delete ret._id
         delete ret.__v
         return ret
