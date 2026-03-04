@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import type { SessionMode, InterviewConfig, SpeechConfig } from '@spotlightready/shared'
 import { InterviewSetupForm } from '@/components/setup/InterviewSetupForm'
 import { SpeechSetupForm } from '@/components/setup/SpeechSetupForm'
@@ -14,7 +14,7 @@ type SetupStep = 'configure' | 'prepare'
  * PRE-SESSION FLOW
  * Step 2 (configure) → Step 3 (prepare + countdown)
  */
-export default function SessionSetupPage() {
+function SessionSetupContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const mode = searchParams.get('mode') as SessionMode
@@ -74,5 +74,13 @@ export default function SessionSetupPage() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function SessionSetupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-white/40">Loading...</div>}>
+      <SessionSetupContent />
+    </Suspense>
   )
 }
