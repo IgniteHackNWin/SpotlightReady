@@ -14,7 +14,7 @@ const ReportSchema = new Schema<ReportDocument>(
     visualPresence: { type: Schema.Types.Mixed, required: true },
     contentIntelligence: { type: Schema.Types.Mixed, required: true },
     grammarLanguage: { type: Schema.Types.Mixed, required: true },
-    replayMarkers: { type: Array, default: [] },
+    replayMarkers: { type: Schema.Types.Mixed, default: [] },
     improvementPlan: { type: Schema.Types.Mixed, required: true },
     scoreBreakdown: { type: Schema.Types.Mixed, required: true },
   },
