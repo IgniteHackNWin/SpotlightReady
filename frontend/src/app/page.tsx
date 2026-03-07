@@ -1,8 +1,4 @@
-'use client'
-
 import Link from 'next/link'
-import { motion, useScroll, useTransform, useInView } from 'framer-motion'
-import { useRef, useState, useEffect } from 'react'
 
 const STATS = [
   { value: '6', label: 'Live Metrics' },
@@ -65,335 +61,109 @@ const FEATURES = [
   },
 ]
 
-const TESTIMONIALS = [
-  {
-    quote: "Landed my FAANG offer after 5 practice sessions. The AI feedback was spot-on.",
-    name: "Priya S.",
-    role: "SDE-2 @ Google",
-    avatar: "👩‍💻",
-  },
-  {
-    quote: "Best interview prep tool I've used. Real-time metrics kept me aware without being distracting.",
-    name: "Arjun M.",
-    role: "Product Manager @ Microsoft",
-    avatar: "👨‍💼",
-  },
-  {
-    quote: "The speech mode helped me nail my TED talk. Confidence score was incredibly accurate.",
-    name: "Neha K.",
-    role: "Startup Founder",
-    avatar: "👩‍🚀",
-  },
-]
-
-// Animated counter component
-function AnimatedCounter({ end, duration = 2 }: { end: number; duration?: number }) {
-  const [count, setCount] = useState(0)
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true })
-
-  useEffect(() => {
-    if (!isInView) return
-    let startTime: number
-    let animationFrame: number
-
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp
-      const progress = (timestamp - startTime) / (duration * 1000)
-
-      if (progress < 1) {
-        setCount(Math.floor(end * progress))
-        animationFrame = requestAnimationFrame(animate)
-      } else {
-        setCount(end)
-      }
-    }
-
-    animationFrame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(animationFrame)
-  }, [end, duration, isInView])
-
-  return <span ref={ref}>{count}</span>
-}
-
 export default function HomePage() {
-  const { scrollY } = useScroll()
-  const heroY = useTransform(scrollY, [0, 300], [0, 100])
-  const heroOpacity = useTransform(scrollY, [0, 300], [1, 0])
-
   return (
-    <main className="min-h-screen bg-surface-950 text-white overflow-hidden relative">
-      {/* Animated background gradients */}
-      <div className="fixed inset-0 -z-10">
-        <motion.div
-          className="absolute top-0 -left-1/4 w-[800px] h-[800px] bg-brand-500/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-0 -right-1/4 w-[800px] h-[800px] bg-accent-cyan/10 rounded-full blur-3xl"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1,
-          }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 w-[600px] h-[600px] bg-accent-green/5 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2,
-          }}
-        />
-      </div>
-
-      {/* Floating Action Button */}
-      <motion.div
-        className="fixed bottom-8 right-8 z-50"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 1, type: "spring", stiffness: 260, damping: 20 }}
-      >
-        <Link href="/session/setup?mode=interview">
-          <motion.button
-            className="bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-white rounded-full p-4 shadow-2xl shadow-brand-500/50 backdrop-blur-sm border border-brand-400/20"
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="text-2xl">🚀</span>
-          </motion.button>
-        </Link>
-      </motion.div>
+    <main className="min-h-screen bg-surface-950 text-white">
 
       {/* ── Nav ──────────────────────────────────────────────────────── */}
-      <motion.nav
-        className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-surface-800/60 backdrop-blur-md bg-surface-950/80 sticky top-0 z-40"
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, type: "spring" }}
-      >
-        <motion.div
-          className="flex items-center gap-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <span className="text-xl font-bold tracking-tight">
-            Spotlight<span className="text-brand-400">Ready</span>
-          </span>
-        </motion.div>
-        <motion.div
-          className="flex items-center gap-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
+      <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-surface-800/60">
+        <div className="flex items-center gap-2">
+          <span className="text-xl font-bold tracking-tight">Spotlight<span className="text-brand-400">Ready</span></span>
+        </div>
+        <div className="flex items-center gap-4">
           <Link
             href="/session/setup?mode=interview"
-            className="hidden md:inline-flex px-5 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-surface-800/50 transition-all"
+            className="hidden md:inline-flex px-5 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white transition-colors"
           >
             Interview Mode
           </Link>
           <Link
             href="/session/setup?mode=speech"
-            className="hidden md:inline-flex px-5 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-surface-800/50 transition-all"
+            className="hidden md:inline-flex px-5 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white transition-colors"
           >
             Speech Mode
           </Link>
-          <Link href="/session/setup?mode=interview">
-            <motion.button
-              className="px-5 py-2 rounded-lg bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-white text-sm font-semibold shadow-lg shadow-brand-500/25"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Start Free →
-            </motion.button>
+          <Link
+            href="/session/setup?mode=interview"
+            className="px-5 py-2 rounded-lg bg-brand-500 hover:bg-brand-400 text-white text-sm font-semibold transition-colors"
+          >
+            Start Free →
           </Link>
-        </motion.div>
-      </motion.nav>
+        </div>
+      </nav>
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <motion.section
-        className="max-w-6xl mx-auto px-6 md:px-12 pt-24 pb-16 text-center relative"
-        style={{ y: heroY, opacity: heroOpacity }}
-      >
-        <motion.div
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-sm mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-        >
-          <motion.span
-            className="w-2 h-2 rounded-full bg-accent-green"
-            animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-          Real-time AI Performance Engine — Built for Hackathon 2026
-        </motion.div>
+      <section className="max-w-6xl mx-auto px-6 md:px-12 pt-24 pb-16 text-center">
+        {/* Hero content container with subtle outline */}
+        <div className="max-w-4xl mx-auto border border-white/10 rounded-3xl p-8 md:p-12 bg-surface-900/20 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-sm mb-8">
+            <span className="w-2 h-2 rounded-full bg-accent-green animate-pulse-slow" />
+            Real-time AI Performance Engine — Built for Hackathon 2026
+          </div>
 
-        <motion.h1
-          className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.8 }}
-        >
-          <span className="text-white">Stop Practicing Blind.</span>
-          <br />
-          <span className="bg-gradient-to-r from-brand-400 via-accent-cyan to-brand-300 bg-clip-text text-transparent animate-gradient">
-            Get SpotlightReady.
-          </span>
-        </motion.h1>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
+            <span className="text-white">Stop Practicing Blind.</span>
+            <br />
+            <span className="bg-gradient-to-r from-brand-400 via-accent-cyan to-brand-300 bg-clip-text text-transparent">
+              Get SpotlightReady.
+            </span>
+          </h1>
 
-        <motion.p
-          className="text-xl text-white/55 leading-relaxed max-w-2xl mx-auto mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.6 }}
-        >
-          The only platform that simulates real interviews and speeches with live audio-visual analytics,
-          AI-generated questions, and a structured 7-section performance report — all in your browser.
-        </motion.p>
+          <p className="text-xl text-white/55 leading-relaxed max-w-2xl mx-auto mb-8">
+            The only platform that simulates real interviews and speeches with live audio-visual analytics,
+            AI-generated questions, and a structured 7-section performance report — all in your browser.
+          </p>
+        </div>
 
-        <motion.div
-          className="flex flex-col sm:flex-row gap-4 justify-center mb-20"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-        >
-          <Link href="/session/setup?mode=interview">
-            <motion.button
-              className="group px-8 py-4 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-white font-semibold text-lg shadow-lg shadow-brand-500/25 border border-brand-400/20"
-              whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(99, 102, 241, 0.4)" }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <span className="group-hover:translate-x-1 inline-block transition-transform">
-                💼 Start Interview Session
-              </span>
-            </motion.button>
+        {/* Action buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center my-12">
+          <Link
+            href="/session/setup?mode=interview"
+            className="px-8 py-4 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold text-lg transition-all hover:scale-105 shadow-lg shadow-brand-500/25"
+          >
+            💼 Start Interview Session
           </Link>
-          <Link href="/session/setup?mode=speech">
-            <motion.button
-              className="group px-8 py-4 rounded-xl bg-surface-800 hover:bg-surface-700 border border-surface-700 hover:border-accent-cyan/50 text-white font-semibold text-lg transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <span className="group-hover:translate-x-1 inline-block transition-transform">
-                🎤 Start Speech Session
-              </span>
-            </motion.button>
+          <Link
+            href="/session/setup?mode=speech"
+            className="px-8 py-4 rounded-xl bg-surface-800 hover:bg-surface-700 border border-surface-700 text-white font-semibold text-lg transition-all hover:scale-105"
+          >
+            🎤 Start Speech Session
           </Link>
-        </motion.div>
+        </div>
 
-        {/* Stats bar with animated counters */}
-        <motion.div
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.6 }}
-        >
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.1 }}
-          >
-            <div className="text-3xl font-bold text-brand-400">
-              <AnimatedCounter end={6} />
+        {/* Stats bar */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto">
+          {STATS.map((s) => (
+            <div key={s.label} className="text-center">
+              <div className="text-3xl font-bold text-brand-400">{s.value}</div>
+              <div className="text-white/40 text-sm mt-1">{s.label}</div>
             </div>
-            <div className="text-white/40 text-sm mt-1">Live Metrics</div>
-          </motion.div>
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2 }}
-          >
-            <div className="text-3xl font-bold text-brand-400">
-              <AnimatedCounter end={7} />
-            </div>
-            <div className="text-white/40 text-sm mt-1">Report Sections</div>
-          </motion.div>
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.3 }}
-          >
-            <div className="text-3xl font-bold text-brand-400">
-              <AnimatedCounter end={30} />+
-            </div>
-            <div className="text-white/40 text-sm mt-1">Role Types</div>
-          </motion.div>
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.4 }}
-          >
-            <div className="text-3xl font-bold text-brand-400">
-              <AnimatedCounter end={2} /> AI
-            </div>
-            <div className="text-white/40 text-sm mt-1">LLM Models</div>
-          </motion.div>
-        </motion.div>
-      </motion.section>
+          ))}
+        </div>
+      </section>
 
       {/* ── How it works ──────────────────────────────────────────────── */}
       <section className="bg-surface-900/50 border-y border-surface-800/60 py-20">
         <div className="max-w-6xl mx-auto px-6 md:px-12">
-          <motion.div
-            className="text-center mb-14"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
+          <div className="text-center mb-14">
             <p className="text-brand-400 text-sm font-medium uppercase tracking-wider mb-3">The Flow</p>
             <h2 className="text-3xl md:text-4xl font-bold text-white">From setup to insight in minutes</h2>
-          </motion.div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {HOW_IT_WORKS.map((step, i) => (
-              <motion.div
-                key={step.step}
-                className="relative"
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.6 }}
-              >
+              <div key={step.step} className="relative">
                 {i < HOW_IT_WORKS.length - 1 && (
                   <div className="hidden md:block absolute top-8 left-full w-full h-px bg-gradient-to-r from-surface-700 to-transparent z-0" />
                 )}
-                <div className="relative z-10 group">
-                  <motion.div
-                    className="w-16 h-16 rounded-2xl bg-surface-800 border border-surface-700 flex items-center justify-center text-2xl mb-5 group-hover:border-brand-500/50 group-hover:bg-surface-700 transition-all"
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                  >
+                <div className="relative z-10">
+                  <div className="w-16 h-16 rounded-2xl bg-surface-800 border border-surface-700 flex items-center justify-center text-2xl mb-5">
                     {step.icon}
-                  </motion.div>
+                  </div>
                   <div className="text-brand-500 text-xs font-bold uppercase tracking-widest mb-2">{step.step}</div>
                   <h3 className="text-white font-semibold text-lg mb-2">{step.title}</h3>
                   <p className="text-white/45 text-sm leading-relaxed">{step.desc}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -401,167 +171,54 @@ export default function HomePage() {
 
       {/* ── Features ─────────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-6 md:px-12 py-20">
-        <motion.div
-          className="text-center mb-14"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
+        <div className="text-center mb-14">
           <p className="text-accent-cyan text-sm font-medium uppercase tracking-wider mb-3">Why SpotlightReady</p>
           <h2 className="text-3xl md:text-4xl font-bold text-white">Not a chatbot. Not a grammar checker.</h2>
           <p className="text-white/40 mt-3 text-lg">A full simulation engine with real scores.</p>
-        </motion.div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {FEATURES.map((f, i) => (
-            <motion.div
-              key={f.title}
-              className="glass-card p-8 hover:border-surface-600/60 transition-all group cursor-pointer relative overflow-hidden"
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.6 }}
-              whileHover={{
-                y: -8,
-                boxShadow: "0 20px 60px rgba(0, 0, 0, 0.4)",
-              }}
-            >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-              />
-              <div className="relative z-10">
-                <motion.div
-                  className="text-4xl mb-5"
-                  whileHover={{ scale: 1.2, rotate: 10 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  {f.icon}
-                </motion.div>
-                <h3 className="text-white font-bold text-xl mb-3 group-hover:text-brand-300 transition-colors">{f.title}</h3>
-                <p className="text-white/50 leading-relaxed group-hover:text-white/70 transition-colors">{f.desc}</p>
-              </div>
-            </motion.div>
+          {FEATURES.map((f) => (
+            <div key={f.title} className="glass-card p-8 hover:border-surface-600/60 transition-colors">
+              <div className="text-4xl mb-5">{f.icon}</div>
+              <h3 className="text-white font-bold text-xl mb-3">{f.title}</h3>
+              <p className="text-white/50 leading-relaxed">{f.desc}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* ── Testimonials ─────────────────────────────────────────────── */}
-      <section className="bg-surface-900/30 py-20 relative overflow-hidden">
-        <motion.div
-          className="max-w-6xl mx-auto px-6 md:px-12"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          <div className="text-center mb-14">
-            <p className="text-accent-green text-sm font-medium uppercase tracking-wider mb-3">Success Stories</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-white">Trusted by performers worldwide</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <motion.div
-                key={t.name}
-                className="glass-card p-6 hover:border-accent-green/30 transition-all"
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.5 }}
-                whileHover={{ y: -5 }}
-              >
-                <div className="text-4xl mb-4">{t.avatar}</div>
-                <p className="text-white/70 italic mb-4 leading-relaxed">"{t.quote}"</p>
-                <div className="border-t border-surface-700 pt-4">
-                  <p className="text-white font-semibold">{t.name}</p>
-                  <p className="text-white/40 text-sm">{t.role}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </section>
-
       {/* ── CTA ──────────────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-6 md:px-12 py-20 text-center">
-        <motion.div
-          className="glass-card p-12 md:p-16 border-brand-500/20 relative overflow-hidden group"
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-        >
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-brand-500/10 via-accent-cyan/10 to-brand-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
-            animate={{
-              x: [-1000, 1000],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          />
-          <div className="relative z-10">
-            <motion.h2
-              className="text-4xl md:text-5xl font-bold text-white mb-5"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
+        <div className="glass-card p-12 md:p-16 border-brand-500/20">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-5">
+            Your next interview is <br />
+            <span className="bg-gradient-to-r from-brand-400 to-accent-cyan bg-clip-text text-transparent">closer than you think.</span>
+          </h2>
+          <p className="text-white/50 text-lg mb-10 max-w-xl mx-auto">
+            Simulate. Analyze. Improve. Repeat. No signup needed.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/session/setup?mode=interview"
+              className="px-8 py-4 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold text-lg transition-all hover:scale-105 shadow-lg shadow-brand-500/25"
             >
-              Your next interview is <br />
-              <span className="bg-gradient-to-r from-brand-400 to-accent-cyan bg-clip-text text-transparent">
-                closer than you think.
-              </span>
-            </motion.h2>
-            <motion.p
-              className="text-white/50 text-lg mb-10 max-w-xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
+              💼 Interview Mode
+            </Link>
+            <Link
+              href="/session/setup?mode=speech"
+              className="px-8 py-4 rounded-xl border border-surface-600 hover:border-accent-cyan/50 hover:bg-surface-800 text-white font-semibold text-lg transition-all hover:scale-105"
             >
-              Simulate. Analyze. Improve. Repeat. No signup needed.
-            </motion.p>
-            <motion.div
-              className="flex flex-col sm:flex-row gap-4 justify-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.6 }}
-            >
-              <Link href="/session/setup?mode=interview">
-                <motion.button
-                  className="group px-8 py-4 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-400 hover:to-brand-500 text-white font-semibold text-lg shadow-lg shadow-brand-500/25"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <span className="group-hover:translate-x-1 inline-block transition-transform">
-                    Start Your First Session →
-                  </span>
-                </motion.button>
-              </Link>
-              <Link href="/session/setup?mode=speech">
-                <motion.button
-                  className="px-8 py-4 rounded-xl bg-surface-800 hover:bg-surface-700 border border-surface-700 hover:border-accent-cyan/50 text-white font-semibold text-lg transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Explore Speech Mode
-                </motion.button>
-              </Link>
-            </motion.div>
+              🎤 Speech Mode
+            </Link>
           </div>
-        </motion.div>
+        </div>
       </section>
 
-      {/* ── Footer ────────────────────────────────────────────────────── */}
-      <footer className="border-t border-surface-800/60 py-8">
-        <div className="max-w-6xl mx-auto px-6 md:px-12 text-center">
-          <p className="text-white/30 text-sm">
-            © 2026 SpotlightReady · Built for Hackathon · Team: Yuvraj & Riya
-          </p>
-        </div>
+      {/* ── Footer ───────────────────────────────────────────────────── */}
+      <footer className="border-t border-surface-800/60 py-8 text-center">
+        <p className="text-white/20 text-sm">
+          SpotlightReady · AI Performance Simulation Engine · Hackathon 2026
+        </p>
       </footer>
     </main>
   )
