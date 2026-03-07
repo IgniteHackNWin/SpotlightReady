@@ -59,6 +59,12 @@ export default function LiveSessionPage() {
   // Fall back to a local UUID if backend was unreachable
   const sessionIdRef = useRef<string>(storeSessionId ?? crypto.randomUUID())
 
+  // ── Metrics timeline capture ───────────────────────────────────────────────
+  // Accumulate snapshots every 5s so the scoring engine has real data to work with
+  const metricsSnapshotsRef = useRef<TimestampedMetrics[]>([])
+  // Always-fresh ref to latest compositeMetrics (avoids stale closure in interval)
+  const latestCompositeRef = useRef<LiveMetrics | null>(null)
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -68,8 +74,23 @@ export default function LiveSessionPage() {
     }
   }
 
+  // Snapshot interval — every 5s save current compositeMetrics with elapsed timestamp
+  useEffect(() => {
+    if (!isStarted) return
+    const interval = setInterval(() => {
+      if (!latestCompositeRef.current) return
+      const startMs = new Date(startedAtRef.current).getTime()
+      metricsSnapshotsRef.current.push({
+        ...latestCompositeRef.current,
+        timestampMs: Date.now() - startMs,
+      })
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [isStarted])
+
   const handleStart = () => {
     startedAtRef.current = new Date().toISOString()
+    metricsSnapshotsRef.current = []   // reset on each new session start
     setIsStarted(true)
     startListening()
     startTracking()
@@ -94,7 +115,7 @@ export default function LiveSessionPage() {
       endedAt,
       durationSeconds,
       transcript,
-      metricsTimeline: [] as TimestampedMetrics[],
+      metricsTimeline: metricsSnapshotsRef.current,
       recordingUrl: null,
     })
     router.push('/session/processing')
@@ -106,6 +127,8 @@ export default function LiveSessionPage() {
     eyeContactScore: eyeMetrics.score,
     eyeContactStatus: eyeMetrics.status,
   }
+  // Keep ref in sync so the snapshot interval always reads latest values
+  latestCompositeRef.current = compositeMetrics
 
   return (
     <main className="relative min-h-screen bg-surface-950 overflow-hidden">
