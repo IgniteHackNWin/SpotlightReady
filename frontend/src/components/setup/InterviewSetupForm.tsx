@@ -90,6 +90,7 @@ const ROLE_GROUPS: { group: string; roles: string[] }[] = [
 ]
 
 export function InterviewSetupForm({ onSubmit }: Props) {
+  const [selectedSector, setSelectedSector] = useState<string>('')
   const [form, setForm] = useState<Partial<InterviewConfig>>({
     mode: 'interview',
     role: '',
@@ -106,6 +107,11 @@ export function InterviewSetupForm({ onSubmit }: Props) {
     onSubmit(form as InterviewConfig)
   }
 
+  // Get available roles based on selected sector
+  const availableRoles = selectedSector
+    ? ROLE_GROUPS.find((g) => g.group === selectedSector)?.roles || []
+    : []
+
   const field = (label: string, children: React.ReactNode) => (
     <div>
       <label className="block text-white/60 text-sm mb-2">{label}</label>
@@ -113,7 +119,7 @@ export function InterviewSetupForm({ onSubmit }: Props) {
     </div>
   )
 
-  const selectClass = "w-full bg-surface-800 border border-surface-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-500 transition-colors"
+  const selectClass = "w-full bg-surface-800 border border-surface-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-brand-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -122,23 +128,41 @@ export function InterviewSetupForm({ onSubmit }: Props) {
         <p className="text-white/40">Configure your simulation session</p>
       </div>
 
-      {field('Role / Position *', (
-        <select
-          className={selectClass}
-          value={form.role}
-          onChange={(e) => setForm({ ...form, role: e.target.value })}
-          required
-        >
-          <option value="" disabled>Select your role…</option>
-          {ROLE_GROUPS.map((group) => (
-            <optgroup key={group.group} label={`—— ${group.group} ——`}>
-              {group.roles.map((role) => (
-                <option key={role} value={role}>{role}</option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-      ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {field('Select Sector / Stream *', (
+          <select
+            className={selectClass}
+            value={selectedSector}
+            onChange={(e) => {
+              setSelectedSector(e.target.value)
+              setForm({ ...form, role: '' }) // Reset role when sector changes
+            }}
+            required
+          >
+            <option value="" disabled>Choose your sector…</option>
+            {ROLE_GROUPS.map((group) => (
+              <option key={group.group} value={group.group}>{group.group}</option>
+            ))}
+          </select>
+        ))}
+
+        {field('Select Role / Position *', (
+          <select
+            className={selectClass}
+            value={form.role}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            required
+            disabled={!selectedSector}
+          >
+            <option value="" disabled>
+              {selectedSector ? 'Select your role…' : 'Choose sector first…'}
+            </option>
+            {availableRoles.map((role) => (
+              <option key={role} value={role}>{role}</option>
+            ))}
+          </select>
+        ))}
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
         {field('Experience Level', (

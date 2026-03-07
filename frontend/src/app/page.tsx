@@ -6,7 +6,7 @@ const STATS = [
   { value: '6', label: 'Live Metrics' },
   { value: '7', label: 'Report Sections' },
   { value: '30+', label: 'Role Types' },
-  { value: '2 AI', label: 'LLM Models' },
+  { value: '100%', label: 'Browser-Based' },
 ]
 
 const HOW_IT_WORKS = [
