@@ -66,29 +66,40 @@ export default function HomePage() {
     <main className="min-h-screen bg-surface-950 text-white">
 
       {/* ── Nav ──────────────────────────────────────────────────────── */}
-      <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-surface-800/60">
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-bold tracking-tight">Spotlight<span className="text-brand-400">Ready</span></span>
-        </div>
-        <div className="flex items-center gap-4">
+      <nav className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-surface-800/60 backdrop-blur-md bg-surface-950/80 sticky top-0 z-40">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <span className="text-xl font-bold tracking-tight">
+            Spotlight<span className="text-brand-400">Ready</span>
+          </span>
+        </Link>
+        <div className="flex items-center gap-2 md:gap-4">
+          <Link
+            href="/"
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-surface-800/50 transition-all"
+          >
+            Home
+          </Link>
           <Link
             href="/session/setup?mode=interview"
-            className="hidden md:inline-flex px-5 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-surface-800/50 transition-all"
           >
-            Interview Mode
+            Interview
           </Link>
           <Link
             href="/session/setup?mode=speech"
-            className="hidden md:inline-flex px-5 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-surface-800/50 transition-all"
           >
-            Speech Mode
+            Speech
           </Link>
-          <Link
-            href="/session/setup?mode=interview"
-            className="px-5 py-2 rounded-lg bg-brand-500 hover:bg-brand-400 text-white text-sm font-semibold transition-colors"
+          <button
+            onClick={() => {
+              const section = document.querySelector('#how-it-works');
+              section?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-surface-800/50 transition-all"
           >
-            Start Free →
-          </Link>
+            How It Works
+          </button>
         </div>
       </nav>
 
@@ -145,7 +156,7 @@ export default function HomePage() {
       </section>
 
       {/* ── How it works ──────────────────────────────────────────────── */}
-      <section className="bg-surface-900/50 border-y border-surface-800/60 py-20">
+      <section id="how-it-works" className="bg-surface-900/50 border-y border-surface-800/60 py-20">
         <div className="max-w-6xl mx-auto px-6 md:px-12">
           <div className="text-center mb-14">
             <p className="text-brand-400 text-sm font-medium uppercase tracking-wider mb-3">The Flow</p>
