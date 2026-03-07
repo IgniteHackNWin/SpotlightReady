@@ -566,24 +566,3 @@ export default function HomePage() {
     </main>
   )
 }
-              💼 Interview Mode
-            </Link>
-            <Link
-              href="/session/setup?mode=speech"
-              className="px-8 py-4 rounded-xl border border-surface-600 hover:border-accent-cyan/50 hover:bg-surface-800 text-white font-semibold text-lg transition-all hover:scale-105"
-            >
-              🎤 Speech Mode
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Footer ───────────────────────────────────────────────────── */}
-      <footer className="border-t border-surface-800/60 py-8 text-center">
-        <p className="text-white/20 text-sm">
-          SpotlightReady · AI Performance Simulation Engine · Hackathon 2026
-        </p>
-      </footer>
-    </main>
-  )
-}
