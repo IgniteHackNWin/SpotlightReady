@@ -40,6 +40,7 @@ export async function generateReport(session: SessionData): Promise<PerformanceR
     fillerCount: speechAnalytics.totalFillerWords,
     topFillers: Object.keys(speechAnalytics.fillerWordBreakdown).slice(0, 3),
     durationSeconds: session.durationSeconds,
+    questionTimings: session.questionTimings,
   })
 
   // ── 3. Score Breakdown (math) ─────────────────────────────────────────────

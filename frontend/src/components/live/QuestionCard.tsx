@@ -1,11 +1,42 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useSessionStore } from '@/store/sessionStore'
+import type { QuestionTiming } from '@spotlightready/shared'
 
-export function QuestionCard() {
+interface Props {
+  onTimingsUpdate?: (timings: QuestionTiming[]) => void
+  transcriptGetter?: () => string
+  fillerGetter?: () => number
+  wpmGetter?: () => number
+  sessionStartMs?: number
+}
+
+export function QuestionCard({ onTimingsUpdate, transcriptGetter, fillerGetter, wpmGetter, sessionStartMs = 0 }: Props) {
   const questions = useSessionStore((s) => s.questions)
   const [index, setIndex] = useState(0)
+
+  const questionStartRef = useRef<number>(Date.now())
+  const fillerAtStartRef = useRef<number>(0)
+  const timingsRef = useRef<QuestionTiming[]>([])
+
+  const recordAndNavigate = useCallback((prevIdx: number, nextIdx: number) => {
+    const nowMs = Date.now()
+    timingsRef.current[prevIdx] = {
+      questionIndex: prevIdx,
+      questionText: questions[prevIdx] ?? '',
+      startMs: questionStartRef.current - sessionStartMs,
+      endMs: nowMs - sessionStartMs,
+      durationSeconds: Math.round((nowMs - questionStartRef.current) / 1000),
+      transcriptText: transcriptGetter?.() ?? '',
+      fillerCount: Math.max(0, (fillerGetter?.() ?? 0) - fillerAtStartRef.current),
+      avgWPM: wpmGetter?.() ?? 0,
+    }
+    questionStartRef.current = nowMs
+    fillerAtStartRef.current = fillerGetter?.() ?? 0
+    onTimingsUpdate?.(timingsRef.current.filter(Boolean))
+    setIndex(nextIdx)
+  }, [questions, sessionStartMs, transcriptGetter, fillerGetter, wpmGetter, onTimingsUpdate])
 
   const current = questions[index]
   const total = questions.length
@@ -34,7 +65,7 @@ export function QuestionCard() {
       {total > 1 && (
         <div className="flex items-center justify-center gap-4">
           <button
-            onClick={() => setIndex((i) => Math.max(0, i - 1))}
+            onClick={() => index > 0 && recordAndNavigate(index, index - 1)}
             disabled={index === 0}
             className="px-4 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 text-white/60 hover:text-white text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
@@ -45,7 +76,7 @@ export function QuestionCard() {
             {questions.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setIndex(i)}
+                onClick={() => i !== index && recordAndNavigate(index, i)}
                 className={`w-2 h-2 rounded-full transition-colors ${
                   i === index ? 'bg-brand-400' : 'bg-surface-700 hover:bg-surface-600'
                 }`}
@@ -53,7 +84,7 @@ export function QuestionCard() {
             ))}
           </div>
           <button
-            onClick={() => setIndex((i) => Math.min(total - 1, i + 1))}
+            onClick={() => index < total - 1 && recordAndNavigate(index, index + 1)}
             disabled={index === total - 1}
             className="px-4 py-2 rounded-lg bg-surface-800 hover:bg-surface-700 text-white/60 hover:text-white text-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >

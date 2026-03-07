@@ -68,9 +68,9 @@ export function LiveMetricsHUD({ metrics, isActive }: Props) {
         )}
       </div>
 
-      {/* Eye Contact */}
+      {/* Camera Presence */}
       <div className="live-metric-card flex flex-col items-center gap-1">
-        <span className="text-white/40 text-xs uppercase tracking-wider">Eye Contact</span>
+        <span className="text-white/40 text-xs uppercase tracking-wider">Camera</span>
         <span className={cn(
           'text-xl font-bold',
           metrics.eyeContactScore > 70 ? 'text-accent-green' : metrics.eyeContactScore > 40 ? 'text-accent-amber' : 'text-accent-red'
@@ -78,13 +78,13 @@ export function LiveMetricsHUD({ metrics, isActive }: Props) {
           {metrics.eyeContactScore}%
         </span>
         <span className="text-white/40 text-xs">
-          {metrics.eyeContactStatus === 'maintaining' ? 'Good ✓' : 'Look ahead'}
+          {metrics.eyeContactStatus === 'maintaining' ? 'On cam ✓' : 'Face cam'}
         </span>
       </div>
 
-      {/* Confidence Bar */}
+      {/* Delivery Score */}
       <div className="live-metric-card flex flex-col items-center gap-1">
-        <span className="text-white/40 text-xs uppercase tracking-wider">Confidence</span>
+        <span className="text-white/40 text-xs uppercase tracking-wider">Delivery</span>
         <span className="text-xl font-bold text-white">{metrics.confidenceScore}</span>
         <div className="w-full h-1.5 bg-surface-700 rounded-full overflow-hidden">
           <div

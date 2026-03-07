@@ -6,13 +6,14 @@ export function VisualPresenceSection({ data }: Props) {
   if (!data) return null
   return (
     <section className="glass-card p-6">
-      <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+      <h2 className="text-lg font-semibold text-white mb-1 flex items-center gap-2">
         <span className="w-1 h-5 bg-accent-cyan rounded-full" />
         Visual Presence
       </h2>
+      <p className="text-white/30 text-xs mb-5">Measured via camera — face-detection, not eye-tracking hardware</p>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <ScoreCircle label="Eye Contact" value={data.averageEyeContactPercent} />
-        <ScoreCircle label="Head Stability" value={data.headStabilityScore} />
+        <ScoreCircle label="Camera Presence" value={data.averageEyeContactPercent} />
+        <ScoreCircle label="Frame Stability" value={data.headStabilityScore} />
         <ScoreCircle label="Expressiveness" value={data.expressivenessScore} />
         {data.postureStabilityScore >= 0 && (
           <ScoreCircle label="Posture" value={data.postureStabilityScore} />
@@ -20,8 +21,8 @@ export function VisualPresenceSection({ data }: Props) {
       </div>
       {(data.eyeContactDips ?? []).length > 0 && (
         <div className="mt-6">
-          <p className="text-white/40 text-xs uppercase tracking-wider mb-2">Eye Contact Dips</p>
-          <p className="text-white/60 text-sm">{data.eyeContactDips.length} dip(s) detected during session</p>
+          <p className="text-white/40 text-xs uppercase tracking-wider mb-2">Presence Dips</p>
+          <p className="text-white/60 text-sm">{data.eyeContactDips.length} moment(s) where your face left the frame</p>
         </div>
       )}
     </section>

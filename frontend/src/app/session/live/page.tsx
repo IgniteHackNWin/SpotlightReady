@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import type { SessionConfig, LiveMetrics, TimestampedMetrics } from '@spotlightready/shared'
+import type { SessionConfig, LiveMetrics, TimestampedMetrics, QuestionTiming } from '@spotlightready/shared'
 import { LiveMetricsHUD } from '@/components/live/LiveMetricsHUD'
 import { SessionTimer } from '@/components/live/SessionTimer'
 import { QuestionCard } from '@/components/live/QuestionCard'
@@ -65,6 +65,19 @@ export default function LiveSessionPage() {
   // Always-fresh ref to latest compositeMetrics (avoids stale closure in interval)
   const latestCompositeRef = useRef<LiveMetrics | null>(null)
 
+  // ── Per-question timings ───────────────────────────────────────────────────
+  const questionTimingsRef = useRef<QuestionTiming[]>([])
+  const sessionStartMsRef = useRef<number>(0)
+  const latestTranscriptRef = useRef<string>('')
+  const latestFillerRef = useRef<number>(0)
+  const latestWPMRef = useRef<number>(0)
+
+  const handleTimingsUpdate = useCallback((timings: QuestionTiming[]) => {
+    questionTimingsRef.current = timings
+  }, [])
+
+  const [teleprompterPos, setTeleprompterPos] = useState(0)
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -88,9 +101,28 @@ export default function LiveSessionPage() {
     return () => clearInterval(interval)
   }, [isStarted])
 
+  // Teleprompter auto-scroll
+  useEffect(() => {
+    if (!isStarted) return
+    const cfg = activeConfig as any
+    if (!cfg?.teleprompterEnabled || !cfg?.teleprompterScript || cfg?.mode !== 'speech') return
+    const speed: number = cfg.teleprompterSpeed ?? 150
+    const wordCount = (cfg.teleprompterScript as string).split(/\s+/).filter(Boolean).length
+    if (!wordCount) return
+    const totalMs = (wordCount / speed) * 60000
+    const startTime = Date.now()
+    const iv = setInterval(() => {
+      setTeleprompterPos(Math.min(100, ((Date.now() - startTime) / totalMs) * 100))
+    }, 200)
+    return () => clearInterval(iv)
+  }, [isStarted, activeConfig]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleStart = () => {
     startedAtRef.current = new Date().toISOString()
+    sessionStartMsRef.current = Date.now()
     metricsSnapshotsRef.current = []   // reset on each new session start
+    questionTimingsRef.current = []
+    setTeleprompterPos(0)
     setIsStarted(true)
     startListening()
     startTracking()
@@ -116,6 +148,7 @@ export default function LiveSessionPage() {
       durationSeconds,
       transcript,
       metricsTimeline: metricsSnapshotsRef.current,
+      questionTimings: questionTimingsRef.current,
       recordingUrl: null,
     })
     router.push('/session/processing')
@@ -129,6 +162,12 @@ export default function LiveSessionPage() {
   }
   // Keep ref in sync so the snapshot interval always reads latest values
   latestCompositeRef.current = compositeMetrics
+  latestTranscriptRef.current = transcript.map((s) => s.text).join(' ')
+  latestFillerRef.current = metrics.fillerWordCount
+  latestWPMRef.current = metrics.currentWPM
+
+  const teleScript = (activeConfig as any)?.teleprompterScript as string | undefined
+  const teleEnabled = (activeConfig as any)?.teleprompterEnabled === true && !!teleScript && activeConfig?.mode === 'speech'
 
   return (
     <main className="relative min-h-screen bg-surface-950 overflow-hidden">
@@ -161,12 +200,41 @@ export default function LiveSessionPage() {
           </button>
         </div>
 
-        {/* Center – Question display (interview mode only) */}
-        {activeConfig?.mode === 'interview' && (
-          <div className="flex-1 flex items-center justify-center px-8">
-            <QuestionCard />
-          </div>
-        )}
+        {/* Center content */}
+        <div className="flex-1 flex items-center justify-center px-8">
+          {activeConfig?.mode === 'interview' && (
+            <QuestionCard
+              onTimingsUpdate={handleTimingsUpdate}
+              transcriptGetter={() => latestTranscriptRef.current}
+              fillerGetter={() => latestFillerRef.current}
+              wpmGetter={() => latestWPMRef.current}
+              sessionStartMs={sessionStartMsRef.current}
+            />
+          )}
+
+          {activeConfig?.mode === 'speech' && teleEnabled && isStarted && (
+            <div className="w-full max-w-2xl glass-card p-6 overflow-hidden relative" style={{ maxHeight: '45vh' }}>
+              <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-surface-900 to-transparent z-10 pointer-events-none" />
+              <div
+                className="text-white/80 text-lg leading-relaxed whitespace-pre-wrap transition-transform duration-300"
+                style={{ transform: `translateY(-${teleprompterPos * 2}px)` }}
+              >
+                {teleScript}
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface-900 to-transparent z-10 pointer-events-none" />
+              <div className="absolute bottom-2 left-4 right-4 h-1 bg-surface-700 rounded-full z-20">
+                <div className="h-full bg-brand-500 rounded-full transition-all" style={{ width: `${teleprompterPos}%` }} />
+              </div>
+            </div>
+          )}
+
+          {activeConfig?.mode === 'speech' && !teleEnabled && (
+            <div className="glass-card max-w-2xl w-full p-8 text-center">
+              <p className="text-white/40 text-xs uppercase tracking-wider mb-3">Your Topic</p>
+              <p className="text-2xl text-white font-medium">{(activeConfig as any).topic}</p>
+            </div>
+          )}
+        </div>
 
         {/* Bottom – Live metrics HUD */}
         <div className="p-4">
@@ -179,7 +247,11 @@ export default function LiveSessionPage() {
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-surface-950/90">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-white mb-2">Ready?</h2>
-            <p className="text-white/50 mb-8">Microphone and camera are active</p>
+            <p className="text-white/50 mb-8">
+              {activeConfig?.mode === 'speech' && (activeConfig as any).teleprompterEnabled
+                ? 'Teleprompter will auto-scroll when you start'
+                : 'Microphone and camera are active'}
+            </p>
             <button
               onClick={handleStart}
               className="px-8 py-4 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold text-lg transition-all hover:scale-105"

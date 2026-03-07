@@ -35,6 +35,10 @@ export interface SpeechConfig {
   durationMinutes: number
   formality: 'formal' | 'informal'
   teleprompterEnabled: boolean
+  /** Full speech script pasted by user — used for teleprompter display */
+  teleprompterScript?: string
+  /** Teleprompter scroll speed in words-per-minute (default 150) */
+  teleprompterSpeed?: number
 }
 
 export type SessionConfig = InterviewConfig | SpeechConfig
@@ -92,6 +96,9 @@ export interface SessionData {
   /** Snapshot metrics timeline (sampled every Xs during session) */
   metricsTimeline: TimestampedMetrics[]
 
+  /** Per-question time + speech breakdown (interview mode only) */
+  questionTimings?: QuestionTiming[]
+
   /** Raw recording reference (storage URL or null if not stored) */
   recordingUrl: string | null
 }
@@ -105,6 +112,18 @@ export interface TranscriptSegment {
 
 export interface TimestampedMetrics extends LiveMetrics {
   timestampMs: number
+}
+
+/** Time and speech data captured per interview question */
+export interface QuestionTiming {
+  questionIndex: number
+  questionText: string
+  startMs: number
+  endMs: number
+  durationSeconds: number
+  transcriptText: string
+  fillerCount: number
+  avgWPM: number
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -176,6 +195,15 @@ export interface VisualPresence {
 // ── Section 4 ─────────────────────────────────────────────────────────────────
 export type ContentIntelligence = InterviewContentScore | SpeechContentScore
 
+export interface QuestionBreakdown {
+  questionIndex: number
+  questionText: string
+  durationSeconds: number
+  answerScore: number
+  feedback: string
+  issues: string[]
+}
+
 export interface InterviewContentScore {
   type: 'interview'
   relevanceScore: number
@@ -184,6 +212,7 @@ export interface InterviewContentScore {
   structureScore: number
   depthScore: number
   feedback: string
+  questionBreakdowns?: QuestionBreakdown[]
 }
 
 export interface SpeechContentScore {

@@ -15,7 +15,7 @@ export function SpeechAnalyticsSection({ data }: Props) {
         <Stat label="Avg WPM" value={data.averageWPM ?? 0} unit="wpm" />
         <Stat label="Filler Words" value={data.totalFillerWords ?? 0} highlight={(data.totalFillerWords ?? 0) > 10} />
         <Stat label="Rhythm Score" value={data.rhythmConsistencyScore ?? 0} unit="/100" />
-        <Stat label="Stutters" value={data.stutterCount ?? 0} highlight={(data.stutterCount ?? 0) > 5} />
+        <StatNA label="Stutters" note="not tracked" />
       </div>
       {Object.keys(fillerBreakdown).length > 0 && (
         <div>
@@ -40,6 +40,16 @@ function Stat({ label, value, unit, highlight }: { label: string; value: number;
         {value}{unit && <span className="text-sm text-white/40 ml-1">{unit}</span>}
       </div>
       <div className="text-white/40 text-xs mt-1">{label}</div>
+    </div>
+  )
+}
+
+function StatNA({ label, note }: { label: string; note: string }) {
+  return (
+    <div className="text-center p-3 bg-surface-800 rounded-xl" title={`${label}: ${note}`}>
+      <div className="text-2xl font-bold text-white/20">N/A</div>
+      <div className="text-white/40 text-xs mt-1">{label}</div>
+      <div className="text-white/20 text-xs">{note}</div>
     </div>
   )
 }

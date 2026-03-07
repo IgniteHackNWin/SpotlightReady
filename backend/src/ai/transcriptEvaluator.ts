@@ -4,6 +4,7 @@ import type {
   SessionConfig,
   ContentIntelligence,
   GrammarLanguage,
+  QuestionTiming,
 } from '@spotlightready/shared'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -25,6 +26,8 @@ interface EvalInput {
   fillerCount: number
   topFillers: string[]
   durationSeconds: number
+  /** Per-question data — interview mode only */
+  questionTimings?: QuestionTiming[]
 }
 
 interface EvalOutput {
@@ -42,7 +45,10 @@ Analyze the candidate's response and return ONLY valid JSON with this exact stru
     "missedPoints": ["point1", "point2"],
     "structureScore": 0-100,
     "depthScore": 0-100,
-    "feedback": "2-3 sentence coaching feedback"
+    "feedback": "2-3 sentence coaching feedback",
+    "questionBreakdowns": [
+      { "questionIndex": 0, "questionText": "exact question", "durationSeconds": 45, "answerScore": 0-100, "feedback": "one sentence", "issues": ["issue1"] }
+    ]
   },
   "grammarLanguage": {
     "topErrors": [],
@@ -51,7 +57,7 @@ Analyze the candidate's response and return ONLY valid JSON with this exact stru
     "weakTransitions": ["transition phrase that was weak"]
   }
 }
-Be specific and evidence-based. Reference actual content from the transcript.`
+Be specific and evidence-based. If no per-question data is provided, return questionBreakdowns as [].`
 
 const SPEECH_SYSTEM = `You are an expert speech coach and communication analyst.
 Analyze the speech and return ONLY valid JSON with this exact structure:
@@ -139,13 +145,20 @@ export async function evaluateTranscript(input: EvalInput): Promise<EvalOutput> 
       ? `Role: ${(input.config as any).role}, Difficulty: ${(input.config as any).difficulty}`
       : `Topic: ${(input.config as any).topic}, Audience: ${(input.config as any).audienceSize}`
 
+  const questionBlock = input.config.mode === 'interview' && (input.questionTimings ?? []).length > 0
+    ? '\n\nPER-QUESTION DATA:\n' + input.questionTimings!.map((qt) => {
+        const preview = qt.transcriptText?.trim().slice(0, 150) || '(no speech captured)'
+        return `Q${qt.questionIndex + 1} [${qt.durationSeconds}s, ${qt.fillerCount} fillers]: "${qt.questionText}"\nAnswer: ${preview}`
+      }).join('\n\n')
+    : ''
+
   const user = `${topicLine}
 Duration: ${Math.floor(input.durationSeconds / 60)}m ${input.durationSeconds % 60}s
 Total words: ${input.totalWords}
 Filler words: ${input.fillerCount} (top: ${input.topFillers.join(', ') || 'none'})
 
 TRANSCRIPT:
-${input.transcriptText}`
+${input.transcriptText}${questionBlock}`
 
   return callLLM<EvalOutput>(system, user, SMART_MODEL)
 }

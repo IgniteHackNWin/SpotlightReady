@@ -15,6 +15,8 @@ export function SpeechSetupForm({ onSubmit }: Props) {
     durationMinutes: 5,
     formality: 'formal',
     teleprompterEnabled: false,
+    teleprompterScript: '',
+    teleprompterSpeed: 150,
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -91,6 +93,35 @@ export function SpeechSetupForm({ onSubmit }: Props) {
           </button>
         ))}
       </div>
+
+      {form.teleprompterEnabled && (
+        <div className="space-y-4 p-4 bg-accent-cyan/5 border border-accent-cyan/20 rounded-xl">
+          {field('Paste your speech / script', (
+            <textarea
+              className={`${inputClass} resize-none`}
+              rows={6}
+              placeholder="Paste your full speech here. It will auto-scroll during your session."
+              value={form.teleprompterScript ?? ''}
+              onChange={(e) => setForm({ ...form, teleprompterScript: e.target.value })}
+            />
+          ))}
+          <div>
+            <label className="block text-white/60 text-sm mb-2">
+              Scroll Speed
+              <span className="text-accent-cyan ml-2 font-semibold">{form.teleprompterSpeed ?? 150} WPM</span>
+            </label>
+            <input
+              type="range" min={80} max={220} step={10}
+              value={form.teleprompterSpeed ?? 150}
+              onChange={(e) => setForm({ ...form, teleprompterSpeed: parseInt(e.target.value) })}
+              className="w-full accent-cyan-400"
+            />
+            <div className="flex justify-between text-white/30 text-xs mt-1">
+              <span>80 — slow</span><span>150 — natural</span><span>220 — fast</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <button
         type="submit"
