@@ -95,7 +95,7 @@ export default function HomePage() {
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-6 md:px-12 pt-24 pb-16 text-center">
         {/* Hero content container with subtle outline */}
-        <div className="max-w-4xl mx-auto border border-white/10 rounded-3xl p-8 md:p-12 bg-surface-900/20 backdrop-blur-sm">
+        <div className="max-w-4xl mx-auto border border-white/10 rounded-3xl p-8 md:p-12 bg-surface-900/20 backdrop-blur-sm mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-sm mb-8">
             <span className="w-2 h-2 rounded-full bg-accent-green animate-pulse-slow" />
             Real-time AI Performance Engine — Built for Hackathon 2026
@@ -109,14 +109,14 @@ export default function HomePage() {
             </span>
           </h1>
 
-          <p className="text-xl text-white/55 leading-relaxed max-w-2xl mx-auto mb-8">
+          <p className="text-xl text-white/55 leading-relaxed max-w-2xl mx-auto">
             The only platform that simulates real interviews and speeches with live audio-visual analytics,
             AI-generated questions, and a structured 7-section performance report — all in your browser.
           </p>
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center my-12">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
           <Link
             href="/session/setup?mode=interview"
             className="px-8 py-4 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold text-lg transition-all hover:scale-105 shadow-lg shadow-brand-500/25"
@@ -131,14 +131,16 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Stats bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto">
-          {STATS.map((s) => (
-            <div key={s.label} className="text-center">
-              <div className="text-3xl font-bold text-brand-400">{s.value}</div>
-              <div className="text-white/40 text-sm mt-1">{s.label}</div>
-            </div>
-          ))}
+        {/* Stats bar in separate container */}
+        <div className="max-w-3xl mx-auto border border-white/10 rounded-2xl p-6 md:p-8 bg-surface-900/20 backdrop-blur-sm">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {STATS.map((s) => (
+              <div key={s.label} className="text-center">
+                <div className="text-3xl font-bold text-brand-400">{s.value}</div>
+                <div className="text-white/40 text-sm mt-1">{s.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
