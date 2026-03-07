@@ -19,10 +19,14 @@ export function computeSpeechAnalytics(session: SessionData): SpeechAnalytics {
   const timeline = session.metricsTimeline
   const lastMetrics = timeline[timeline.length - 1]
 
-  // WPM from last snapshot
-  const averageWPM = lastMetrics?.currentWPM || 0
+  // WPM: average across all snapshots where user was speaking (>0 WPM)
+  // Using last snapshot alone gives a distorted reading if the user paused at the end
+  const speakingSnapshots = timeline.filter((t) => t.currentWPM > 0)
+  const averageWPM = speakingSnapshots.length > 0
+    ? Math.round(speakingSnapshots.reduce((a, t) => a + t.currentWPM, 0) / speakingSnapshots.length)
+    : (lastMetrics?.currentWPM || 0)
 
-  // Filler words
+  // Filler words — always take from last snapshot (running total)
   const totalFillerWords = lastMetrics?.fillerWordCount || 0
   const fillerWordBreakdown = lastMetrics?.fillerWordBreakdown || {}
 
@@ -74,7 +78,23 @@ export function computeVisualPresence(session: SessionData): VisualPresence {
   const eyeScores = timeline.map((t) => t.eyeContactScore)
   const avgEye = Math.round(eyeScores.reduce((a, b) => a + b, 0) / eyeScores.length)
 
-  // Dips = eye contact drops below 40% for > 2 consecutive samples
+  // Head stability = inverse of eye-score variance
+  // High variance → head is moving around or looking away repeatedly → lower stability
+  const eyeVariance = eyeScores.reduce((acc, s) => acc + Math.pow(s - avgEye, 2), 0) / eyeScores.length
+  const headStabilityScore = Math.max(0, Math.min(100, Math.round(100 - Math.sqrt(eyeVariance))))
+
+  // Expressiveness = moderate variance is good (too flat = robotic, too erratic = nervous)
+  // Sweet spot: stdDev around 15–25 → maps to ~80
+  const eyeStdDev = Math.sqrt(eyeVariance)
+  const expressivenessScore = Math.max(0, Math.min(100, Math.round(
+    eyeStdDev < 5 ? 40 :       // flat/frozen face
+    eyeStdDev < 15 ? 60 :      // slightly expressive
+    eyeStdDev < 30 ? 80 :      // good natural variation
+    eyeStdDev < 45 ? 65 :      // getting erratic
+    40                          // very erratic
+  )))
+
+  // Dips = eye contact drops below 40% for consecutive samples
   const dips: Array<{ timestampMs: number; durationMs: number }> = []
   let dipStart: number | null = null
   for (const snap of timeline) {
@@ -91,8 +111,8 @@ export function computeVisualPresence(session: SessionData): VisualPresence {
   return {
     averageEyeContactPercent: avgEye,
     eyeContactDips: dips,
-    headStabilityScore: Math.min(100, avgEye + 10),  // proxy for now
-    expressivenessScore: 70,  // TODO: from face landmark variance
+    headStabilityScore,
+    expressivenessScore,
     postureStabilityScore: -1,
   }
 }
@@ -101,36 +121,54 @@ export function computeScoreBreakdown(
   speech: SpeechAnalytics,
   visual: VisualPresence,
   content: ContentIntelligence,
-  avgConfidence: number
+  avgConfidence: number,
+  durationSeconds: number
 ): ScoreBreakdown {
-  // ── Speech Delivery (30 pts) ─────────────────────────────────
-  let speechDelivery = 30
-  // Deduct for pace issues
-  if (speech.averageWPM > WPM_THRESHOLDS.tooFast || speech.averageWPM < WPM_THRESHOLDS.tooSlow) {
-    speechDelivery -= 5
+  const hasSpeech = speech.averageWPM > 0 || speech.totalFillerWords > 0
+
+  // ── Speech Delivery (30 pts) — EARNED model ──────────────────
+  // No speech = 0. Points are earned not deducted from a full bucket.
+  let speechDelivery = 0
+  if (hasSpeech) {
+    // Pace score: ideal WPM range (120–160) earns 12 pts, partial credit outside
+    let paceScore = 12
+    if (speech.averageWPM > WPM_THRESHOLDS.tooFast || speech.averageWPM < WPM_THRESHOLDS.tooSlow) paceScore = 4
+    else if (speech.averageWPM < WPM_THRESHOLDS.idealMin || speech.averageWPM > WPM_THRESHOLDS.idealMax) paceScore = 8
+
+    // Filler rate score: penalise by RATE not raw count (1 filler/100 words is fine, 1 per 5 is bad)
+    const totalWords = Math.max(1, Math.round((speech.averageWPM / 60) * durationSeconds))
+    const fillerRate = speech.totalFillerWords / totalWords  // 0.0 – 1.0
+    const fillerScore = Math.round(Math.max(0, 12 * (1 - fillerRate * 20)))  // 20+ fillers per 100w → 0
+
+    // Rhythm/pause score: up to 6 pts
+    const rhythmScore = Math.round((speech.rhythmConsistencyScore / 100) * 6)
+
+    speechDelivery = Math.min(30, paceScore + fillerScore + rhythmScore)
   }
-  // Deduct for filler words (up to -10)
-  speechDelivery -= Math.min(10, speech.totalFillerWords)
-  // Deduct for long pauses
-  speechDelivery -= Math.min(5, speech.longPauses.length)
-  speechDelivery = Math.max(0, Math.round(speechDelivery))
 
   // ── Visual Presence (20 pts) ─────────────────────────────────
-  const visualPresence = Math.round((visual.averageEyeContactPercent / 100) * 20)
+  // Eye contact is the primary signal (14 pts), head stability is secondary (6 pts)
+  const eyePts = Math.round((visual.averageEyeContactPercent / 100) * 14)
+  const stabPts = Math.round((visual.headStabilityScore / 100) * 6)
+  const visualPresence = Math.min(20, eyePts + stabPts)
 
-  // ── Content Quality (30 pts) ─────────────────────────────────
+  // ── Content Quality (30 pts) — MOST IMPORTANT ────────────────
+  // Content is zero if no speech was captured (fallback eval sends 0s).
+  // In interview mode: relevance + key-concept + structure + depth are equal weight.
+  // Bonus: penalise further if fewer than half the expected questions were addressed.
   let contentQuality = 0
   if (content.type === 'interview') {
-    contentQuality = Math.round(
-      ((content.relevanceScore + content.keyConceptCoverage + content.structureScore + content.depthScore) / 400) * 30
-    )
+    const avg = (content.relevanceScore + content.keyConceptCoverage + content.structureScore + content.depthScore) / 4
+    contentQuality = Math.round((avg / 100) * 30)
   } else {
-    contentQuality = Math.round(
-      ((content.messageClarityScore + content.narrativeStructureScore + content.openingStrengthScore + content.conclusionImpactScore) / 400) * 30
-    )
+    const avg = (content.messageClarityScore + content.narrativeStructureScore + content.openingStrengthScore + content.conclusionImpactScore) / 4
+    contentQuality = Math.round((avg / 100) * 30)
   }
+  // Hard gate: if there was no speech the content evaluation is meaningless → 0
+  if (!hasSpeech) contentQuality = 0
 
   // ── Confidence & Flow (20 pts) ──────────────────────────────
+  // avgConfidence is already WPM-gated on the client, so 0 WPM → ~0 here
   const confidenceFlow = Math.round((avgConfidence / 100) * 20)
 
   const total = speechDelivery + visualPresence + contentQuality + confidenceFlow
@@ -200,25 +238,46 @@ export function buildOverallSummary(
   content: ContentIntelligence
 ): OverallSummary {
   const tier: PerformanceTier = scoreTotier(breakdown.total)
+  const hasSpeech = speech.averageWPM > 0 || speech.totalFillerWords > 0
+
+  // No speech at all — return a clear diagnostic instead of misleading scores
+  if (!hasSpeech) {
+    return {
+      totalScore: breakdown.total,
+      tier,
+      topStrengths: ['Camera was active and eye tracking captured visual data'],
+      topImprovements: [
+        'No speech was captured — grant microphone permission and use Chrome or Edge',
+        'Content is the most important scoring dimension (30 pts) — speak your answers clearly',
+        'Confidence & Flow (20 pts) is zero when no words are spoken',
+      ],
+    }
+  }
 
   const strengths: string[] = []
   const improvements: string[] = []
 
-  if (breakdown.speechDelivery >= 22) strengths.push('Strong speech delivery and pace control')
-  else improvements.push(`Pace control (${speech.averageWPM} WPM, ${speech.totalFillerWords} fillers)`)
+  // Content first — most important (30 pts)
+  if (breakdown.contentQuality >= 22) strengths.push('Well-structured, relevant and in-depth content')
+  else if (breakdown.contentQuality >= 14) improvements.push('Increase answer depth — add specific examples and evidence')
+  else improvements.push('Content quality is the biggest gap — focus on relevance, structure and depth')
 
-  if (breakdown.visualPresence >= 15) strengths.push(`Excellent eye contact (${visual.averageEyeContactPercent}%)`)
-  else improvements.push(`Eye contact (${visual.averageEyeContactPercent}% — aim for 70%+)`)
+  // Speech delivery (30 pts)
+  const fillerRate = speech.totalFillerWords / Math.max(1, Math.round((speech.averageWPM / 60) * 60))
+  if (breakdown.speechDelivery >= 22) strengths.push(`Clean delivery at ${speech.averageWPM} WPM with minimal fillers`)
+  else if (speech.averageWPM === 0) improvements.push('Pace undetectable — ensure microphone is working')
+  else if (fillerRate > 0.1) improvements.push(`High filler word rate ("um", "like", "basically") — ${speech.totalFillerWords} counted`)
+  else improvements.push(`Pace needs work (${speech.averageWPM} WPM — ideal is 120–160 WPM)`)
 
-  if (breakdown.contentQuality >= 22) strengths.push('Well-structured, relevant content')
-  else improvements.push('Content depth and structure')
+  // Visual presence (20 pts)
+  if (breakdown.visualPresence >= 15) strengths.push(`Strong eye contact at ${visual.averageEyeContactPercent}%`)
+  else improvements.push(`Eye contact at ${visual.averageEyeContactPercent}% — aim for 70%+ to build trust`)
 
-  if (breakdown.confidenceFlow >= 15) strengths.push('Confident and steady delivery')
-  else improvements.push('Overall confidence and flow')
+  // Confidence & flow (20 pts)
+  if (breakdown.confidenceFlow >= 15) strengths.push('Confident, steady delivery with good flow')
+  else improvements.push('Confidence and flow — reduce hesitations and filler words')
 
-  // Ensure we have at least 1 of each
-  if (strengths.length === 0) strengths.push('Completed the full session — first step taken')
-  if (improvements.length === 0) improvements.push('Keep pushing for consistency')
+  if (strengths.length === 0) strengths.push('Session completed — data captured for improvement')
 
   return {
     totalScore: breakdown.total,

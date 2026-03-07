@@ -118,6 +118,16 @@ export function useSpeechAnalysis(config: SessionConfig | null) {
         }))
         .slice(0, 3)  // show max 3 at once
 
+      // ── Confidence: WPM-gated so silent/barely-speaking sessions get near-0 ──
+      // wpmEngagement: 0 WPM → 0.0, 80+ WPM → 1.0 (smooth ramp, not a cliff)
+      // Base confidence is then penalised by filler rate and pace issues.
+      // Effect: saying one word can't spike confidence to 87 anymore.
+      const fillerPenalty = Math.min(50, totalFiller * 3)
+      const pacePenalty = paceStatus !== 'ideal' ? 15 : 0
+      const baseConfidence = Math.max(0, 100 - fillerPenalty - pacePenalty)
+      const wpmEngagement = Math.min(1, currentWPM / 80)
+      const confidenceScore = Math.round(baseConfidence * wpmEngagement)
+
       setMetrics((prev) => ({
         ...prev,
         elapsedSeconds,
@@ -126,11 +136,7 @@ export function useSpeechAnalysis(config: SessionConfig | null) {
         fillerWordCount: totalFiller,
         fillerWordBreakdown: { ...fillerCountRef.current },
         repetitions,
-        // Confidence: composite of pace stability + filler rate
-        confidenceScore: Math.max(
-          0,
-          100 - totalFiller * 3 - (paceStatus !== 'ideal' ? 10 : 0)
-        ),
+        confidenceScore,
       }))
     }
 

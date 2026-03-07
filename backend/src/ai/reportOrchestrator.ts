@@ -47,7 +47,8 @@ export async function generateReport(session: SessionData): Promise<PerformanceR
     speechAnalytics,
     visualPresence,
     contentIntelligence,
-    Math.round(avgConfidence)
+    Math.round(avgConfidence),
+    session.durationSeconds
   )
 
   // ── 4. Overall Summary (math + text) ─────────────────────────────────────
