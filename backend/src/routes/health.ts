@@ -1,10 +1,10 @@
-import { Router } from 'express'
+import { Router, type Router as RouterType } from 'express'
 import dotenv from 'dotenv'
 import path from 'path'
 
 const ENV_PATH = path.join(process.cwd(), '.env')
 
-export const healthRouter = Router()
+export const healthRouter: RouterType = Router()
 
 healthRouter.get('/', (_req, res) => {
   res.json({ status: 'ok', service: 'SpotlightReady API', timestamp: new Date().toISOString() })

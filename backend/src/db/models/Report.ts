@@ -14,15 +14,15 @@ const ReportSchema = new Schema<ReportDocument>(
     visualPresence: { type: Schema.Types.Mixed, required: true },
     contentIntelligence: { type: Schema.Types.Mixed, required: true },
     grammarLanguage: { type: Schema.Types.Mixed, required: true },
-    replayMarkers: { type: [Schema.Types.Mixed], default: [] },
+    replayMarkers: { type: Schema.Types.Mixed, default: [] },
     improvementPlan: { type: Schema.Types.Mixed, required: true },
     scoreBreakdown: { type: Schema.Types.Mixed, required: true },
   },
   {
     timestamps: true,
     toJSON: {
-      transform: (_doc, ret) => {
-        ret.reportId = ret._id.toString()
+      transform: (_doc, ret: Record<string, unknown>) => {
+        ret.reportId = (ret._id as { toString(): string }).toString()
         delete ret._id
         delete ret.__v
         return ret
